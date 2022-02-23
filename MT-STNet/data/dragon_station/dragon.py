@@ -31,9 +31,9 @@ months=[-1,31,29,31,30,31,30,31,31,30,31,30,31] # -1 represents a sentinel
 hours=24    # 24 h
 minutes=60  # 60 minutes
 
-data1=pd.read_csv('dragon1.5.csv',encoding='gb2312')
-print(data1.keys())
-# print(data1.loc[(data1['日期']=='2021/6/1')])
+# data1=pd.read_csv('dragon3.csv',encoding='gb2312')
+# print(data1.values)
+# print(data1.loc[(data1['tian']=='2021-06-01')])
 
 # data=pd.read_excel('龙门架编号和名称.xlsx')
 # print(list(data.values[:,0]))
@@ -50,7 +50,7 @@ def read_source(file_paths, beg_month=6,end_month=9,year=2021,encoding='utf-8'):
     :return:
     '''
     for dragon_station in dragon_stations:
-        print('the in_toll_station name is: ',dragon_station)
+        print('the dragon_station name is: ',dragon_station)
         dragon_station_data_list=list()
         # used to store the DataFrame data of each station
         for in_file_path in file_paths:
@@ -63,7 +63,7 @@ def read_source(file_paths, beg_month=6,end_month=9,year=2021,encoding='utf-8'):
             # to traverse the input months list
             for day in range(1, months[month]+1):
                 # to traverse the input days of each month
-                current_date=str(year)+'/'+str(month)+'/'+str(day)
+                current_date=str(year)+'-'+(str(month) if month>9 else '0'+str(month)) +'-'+(str(day) if day>9 else '0'+str(day))
                 for hour in range(hours):
                     for minute in range(0, minutes, 5):
                         sum_flow=0
@@ -88,7 +88,7 @@ def data_combine(file_paths, out_path, beg_month=6,end_month=9,year=2021,encodin
 
 if __name__=='__main__':
     print('beginning')
-    # data_combine(file_paths=['dragon1.5.csv', 'dragon1.csv', 'dragon2.csv', 'dragon3.csv'], out_path='dragon_flow.csv', encoding='gb2312')
+    data_combine(file_paths=['dragon1.5.csv', 'dragon1.csv', 'dragon2.csv', 'dragon3.csv'], out_path='dragon_flow.csv', encoding='gb2312')
     # read_source(file_paths=['in1.5.csv', 'in1.csv', 'in2.csv', 'in3.csv'], year=2021, encoding='gb2312')
     # for line in read_source(file_paths=['in1.5.csv','in1.csv','in2.csv','in3.csv'],year=2021,encoding='gb2312'):
     #     print(line)
