@@ -11,8 +11,8 @@ months=[-1,31,29,31,30,31,30,31,31,30,31,30,31] # -1 represents a sentinel
 hours=24    # 24 h
 minutes=60  # 60 minutes
 
-# data1=pd.read_csv('in1.5.csv',encoding='gb2312')
-# print(data1.values[:10])
+# data1=pd.read_csv('out1.5.csv',encoding='gb2312')
+# print(data1)
 # print(data1.loc[(data1['日期']=='2021/6/1')])
 
 # 思路，先取出每个站点的所有数据，然后，按照时间的顺序遍历每个站点的数据，累积相加即可！！！
