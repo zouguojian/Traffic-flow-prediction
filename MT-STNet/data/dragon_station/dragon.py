@@ -71,7 +71,7 @@ def read_source(file_paths, beg_month=6,end_month=9,year=2021,encoding='utf-8'):
                             if not data.loc[(data['tian'] == current_date) & (data['xiaoshi'] == hour) & (data['fenzhong'] == minute)].empty:
                                 sum_flow+=int(data.loc[(data['tian'] == current_date) & (data['xiaoshi'] == hour) & (data['fenzhong'] == minute)].values[-1][-1])
                         print(dragon_station, current_date,hour,minute,sum_flow)
-                        yield dragon_station, current_date,hour,minute,sum_flow
+                        yield dragon_station, current_date.replace('-','/'),hour,minute,sum_flow
 
 def data_combine(file_paths, out_path, beg_month=6,end_month=9,year=2021,encoding='utf-8'):
     '''
@@ -88,8 +88,27 @@ def data_combine(file_paths, out_path, beg_month=6,end_month=9,year=2021,encodin
 
 if __name__=='__main__':
     print('beginning')
-    data_combine(file_paths=['dragon1.5.csv', 'dragon1.csv', 'dragon2.csv', 'dragon3.csv'], out_path='dragon_flow.csv', encoding='gb2312')
+    # data_combine(file_paths=['dragon1.5.csv', 'dragon1.csv', 'dragon2.csv', 'dragon3.csv'], out_path='dragon_flow.csv', encoding='gb2312')
     # read_source(file_paths=['in1.5.csv', 'in1.csv', 'in2.csv', 'in3.csv'], year=2021, encoding='gb2312')
     # for line in read_source(file_paths=['in1.5.csv','in1.csv','in2.csv','in3.csv'],year=2021,encoding='gb2312'):
     #     print(line)
+    #
+    # data1=pd.read_csv('dragon_flow.csv',encoding='utf-8')
+    #
+    # zero_index=0
+    # start_date='2021/6/1'
+    # for line in data1.values:
+    #     if line[-1]==0:
+    #         zero_index+=1
+    #         if zero_index==1:
+    #             start_date=line[1]
+    #     else:
+    #         if zero_index>=120:
+    #             print(line[0],start_date,line[1])
+    #             zero_index=0
+    #         else:
+    #             zero_index=0
+    #             start_date=line[1]
+
+
     print('finished')
