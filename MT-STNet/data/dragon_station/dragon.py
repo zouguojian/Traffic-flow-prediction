@@ -94,21 +94,30 @@ if __name__=='__main__':
     #     print(line)
     #
     # data1=pd.read_csv('dragon_flow.csv',encoding='utf-8')
+    # data = pd.read_csv('dragon_flow_fill.csv', encoding='utf-8')
     #
-    # zero_index=0
-    # start_date='2021/6/1'
-    # for line in data1.values:
-    #     if line[-1]==0:
-    #         zero_index+=1
-    #         if zero_index==1:
-    #             start_date=line[1]
-    #     else:
-    #         if zero_index>=120:
-    #             print(line[0],start_date,line[1])
-    #             zero_index=0
-    #         else:
-    #             zero_index=0
-    #             start_date=line[1]
+    # print(data1)
+    # print(data)
+    #
+    # for i in range(data.shape[0]):
+    #     print(data1[i])
+    #     print(data[i])
+
+
+    zero_index=0
+    start_date='2021/6/1'
+    for line in data1.values:
+        if line[-1]==0:
+            zero_index+=1
+            if zero_index==1:
+                start_date=line[1]
+        else:
+            if zero_index>=120:
+                print(line[0],start_date,line[1])
+                zero_index=0
+            else:
+                zero_index=0
+                start_date=line[1]
 
 
     print('finished')
