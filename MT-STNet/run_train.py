@@ -350,8 +350,7 @@ class Model(object):
         merged = tf.summary.merge_all()
         writer = tf.summary.FileWriter(logs_path, graph=tf.get_default_graph())
 
-        self.iterate = data_load.DataIterator(site_id=self.para.target_site_id,
-                                              is_training=self.para.is_training,
+        self.iterate = data_load.DataIterator(is_training=self.para.is_training,
                                               time_size=self.para.input_length,
                                               prediction_size=self.para.output_length,
                                               data_divide=self.para.data_divide,
@@ -411,8 +410,7 @@ class Model(object):
 
             self.saver.save(self.sess, save_path='gcn/model/' + 'model.ckpt')
 
-        self.iterate_test = data_load.DataIterator(site_id=self.para.target_site_id,
-                                                   is_training=self.para.is_training,
+        self.iterate_test = data_load.DataIterator(is_training=self.para.is_training,
                                                    time_size=self.para.input_length,
                                                    prediction_size=self.para.output_length,
                                                    data_divide=self.para.data_divide,
