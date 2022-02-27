@@ -57,17 +57,23 @@ def data_train(file_paths, out_path,encoding='utf-8'):
     file = open(out_path, 'w', encoding=encoding)
     writer = csv.writer(file)
     writer.writerow(['station','date','hour','minute','flow'])
-    data_station_dataframe=dict()
+    station_data_dict=dict()
+    rows=26496 # (30+31+31)*24*12
 
+    # 读取所有station的values，并且按照station的映射id进行字典存储
     for path in file_paths:
         data = pd.read_csv(path, encoding=encoding)
+        data['station']=data['station'].astype(str)
         for station in file_path_types[path].keys():
-            data_station_dataframe[str(station)]=data.loc[data['station'] == station]
+            station_data_dict[file_path_types[path][station]]=data.loc[(data['station'] == station)].values
+            rows=data.loc[data['station'] == station].shape[0]
 
-    for line in data.values:
-        print(line)
-        line[0]=file_path_types[path][str(line[0])]
-        writer.writerow(line)
+    # 顺序将station的值进行存储
+    print(rows)
+    for i in range(rows):
+        print('the line index is : ', i)
+        for station_index in station_data_dict.keys():
+            writer.writerow([str(station_index)]+list(station_data_dict[station_index][i])[1:])
     file.close()
 
 if __name__=='__main__':

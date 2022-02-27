@@ -71,12 +71,12 @@ if __name__=='__main__':
     #     print(line)
 
     # data = pd.read_csv('in_flow.csv', encoding='utf-8').values
+
     # file = open('in_flow_train.csv', 'w', encoding='utf-8')
     # writer = csv.writer(file)
     # writer.writerow(['station','date','hour','minute','flow'])
     # for line in data:
-    #     line[0]=str(line[0])
-    #     writer.writerow(line)
+    #     writer.writerow([str(line[0]),str(line[1]),int(line[2]),int(line[3]),int(line[4])])
     # file.close()
 
     print('finished')
