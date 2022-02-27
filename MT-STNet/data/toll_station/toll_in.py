@@ -65,7 +65,18 @@ def data_combine(file_paths, out_path, beg_month=6,end_month=9,year=2021,encodin
 
 if __name__=='__main__':
     print('hello')
-    data_combine(file_paths=['in1.5.csv', 'in1.csv', 'in2.csv', 'in3.csv'], out_path='in_flow.csv', encoding='gb2312')
+    # data_combine(file_paths=['in1.5.csv', 'in1.csv', 'in2.csv', 'in3.csv'], out_path='in_flow.csv', encoding='gb2312')
     # read_source(file_paths=['in1.5.csv', 'in1.csv', 'in2.csv', 'in3.csv'], year=2021, encoding='gb2312')
     # for line in read_source(file_paths=['in1.5.csv','in1.csv','in2.csv','in3.csv'],year=2021,encoding='gb2312'):
     #     print(line)
+
+    # data = pd.read_csv('in_flow.csv', encoding='utf-8').values
+    # file = open('in_flow_train.csv', 'w', encoding='utf-8')
+    # writer = csv.writer(file)
+    # writer.writerow(['station','date','hour','minute','flow'])
+    # for line in data:
+    #     line[0]=str(line[0])
+    #     writer.writerow(line)
+    # file.close()
+
+    print('finished')

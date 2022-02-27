@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import datetime
 
-path = '/Users/dongpingping/Documents/博士研究生/出入口流量预测/data/dragon_flow.csv'
+path = 'dragon_flow.csv'
 
 raw_data = pd.read_csv(path,encoding='utf-8')
 print('before:',raw_data)
@@ -273,4 +273,4 @@ raw_data.loc[(raw_data['station'] == "G000664001000920010") & (
 #              & (G000664001000920010_DATA[
 #                     'date'] <= G000664001000920010_end_empty2), 'flow'])
 print('after:',raw_data)
-raw_data.to_csv('/Users/dongpingping/Documents/博士研究生/出入口流量预测/data/dragon_flow_fill.csv')
+raw_data.to_csv('dragon_flow_fill.csv')

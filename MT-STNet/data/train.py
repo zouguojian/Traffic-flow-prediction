@@ -46,6 +46,7 @@ minutes=60  # 60 minutes
 # print(data1.loc[(data1['日期']=='2021/6/1')])
 
 # 思路，按照每个站点的实际index进行排序
+# each sample shape is : [indexs, features]
 
 def data_train(file_paths, out_path,encoding='utf-8'):
     '''
@@ -56,18 +57,22 @@ def data_train(file_paths, out_path,encoding='utf-8'):
     file = open(out_path, 'w', encoding=encoding)
     writer = csv.writer(file)
     writer.writerow(['station','date','hour','minute','flow'])
+    data_station_dataframe=dict()
 
     for path in file_paths:
         data = pd.read_csv(path, encoding=encoding)
-        for line in data.values:
-            print(line)
-            line[0]=file_path_types[path][str(line[0])]
-            writer.writerow(line)
+        for station in file_path_types[path].keys():
+            data_station_dataframe[str(station)]=data.loc[data['station'] == station]
+
+    for line in data.values:
+        print(line)
+        line[0]=file_path_types[path][str(line[0])]
+        writer.writerow(line)
     file.close()
 
 if __name__=='__main__':
     print('hello')
-    # data_train(file_paths=['toll_station/in_flow.csv', 'toll_station/out_flow.csv', 'dragon_station/dragon_flow.csv'], out_path='train.csv', encoding='utf-8')
+    data_train(file_paths=['toll_station/in_flow.csv', 'toll_station/out_flow.csv', 'dragon_station/dragon_flow.csv'], out_path='train.csv', encoding='utf-8')
 
     print(pd.read_csv('train.csv',encoding='utf-8').shape)
 

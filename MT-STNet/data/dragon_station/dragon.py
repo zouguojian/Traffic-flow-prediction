@@ -33,7 +33,6 @@ minutes=60  # 60 minutes
 
 # data1=pd.read_csv('dragon3.csv',encoding='gb2312')
 # print(data1.values)
-# print(data1.loc[(data1['tian']=='2021-06-01')])
 
 # data=pd.read_excel('龙门架编号和名称.xlsx')
 # print(list(data.values[:,0]))
@@ -92,32 +91,42 @@ if __name__=='__main__':
     # read_source(file_paths=['in1.5.csv', 'in1.csv', 'in2.csv', 'in3.csv'], year=2021, encoding='gb2312')
     # for line in read_source(file_paths=['in1.5.csv','in1.csv','in2.csv','in3.csv'],year=2021,encoding='gb2312'):
     #     print(line)
-    #
+
     # data1=pd.read_csv('dragon_flow.csv',encoding='utf-8')
-    # data = pd.read_csv('dragon_flow_fill.csv', encoding='utf-8')
+    data = pd.read_csv('dragon_flow_fill_new.csv', encoding='utf-8').values
+
+
+    # file = open('dragon_flow_fill_new.csv', 'w', encoding='utf-8')
+    # writer = csv.writer(file)
+    # writer.writerow(['station','date','hour','minute','flow'])
+    # for line in data:
+    #     line[2]=line[2].replace('-','/')
+    #     writer.writerow(line[1:])
+    # file.close()
+
     #
-    # print(data1)
-    # print(data)
+    # print(data1.values)
+    print(data.shape)
     #
     # for i in range(data.shape[0]):
     #     print(data1[i])
     #     print(data[i])
 
 
-    zero_index=0
-    start_date='2021/6/1'
-    for line in data1.values:
-        if line[-1]==0:
-            zero_index+=1
-            if zero_index==1:
-                start_date=line[1]
-        else:
-            if zero_index>=120:
-                print(line[0],start_date,line[1])
-                zero_index=0
-            else:
-                zero_index=0
-                start_date=line[1]
+    # zero_index=0
+    # start_date='2021/6/1'
+    # for line in data1.values:
+    #     if line[-1]==0:
+    #         zero_index+=1
+    #         if zero_index==1:
+    #             start_date=line[1]
+    #     else:
+    #         if zero_index>=120:
+    #             print(line[0],start_date,line[1])
+    #             zero_index=0
+    #         else:
+    #             zero_index=0
+    #             start_date=line[1]
 
 
     print('finished')
