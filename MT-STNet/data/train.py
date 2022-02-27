@@ -56,7 +56,7 @@ def data_train(file_paths, out_path,encoding='utf-8'):
     '''
     file = open(out_path, 'w', encoding=encoding)
     writer = csv.writer(file)
-    writer.writerow(['station','date','hour','minute','flow'])
+    writer.writerow(['station','date','day','hour','minute','flow'])
     station_data_dict=dict()
     rows=26496 # (30+31+31)*24*12
 
@@ -73,7 +73,8 @@ def data_train(file_paths, out_path,encoding='utf-8'):
     for i in range(rows):
         print('the line index is : ', i)
         for station_index in station_data_dict.keys():
-            writer.writerow([str(station_index)]+list(station_data_dict[station_index][i])[1:])
+            writer.writerow([str(station_index)]+[station_data_dict[station_index][i][1]]+
+                            [int(station_data_dict[station_index][i][1].split('/')[-1])]+list(station_data_dict[station_index][i])[2:])
     file.close()
 
 if __name__=='__main__':
