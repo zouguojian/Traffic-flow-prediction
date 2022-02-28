@@ -1,7 +1,7 @@
 # -- coding: utf-8 --
 
-from gcn_model.layers import *
-from gcn_model.metrics import *
+from model.layers import *
+from model.metrics import *
 
 
 class Model(object):

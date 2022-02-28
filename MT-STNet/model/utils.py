@@ -198,3 +198,33 @@ def chebyshev_polynomials(adj, k):
 
     return sparse_to_tuple(t_k)
 
+def accuracy(label, predict):
+    '''
+    :param label: represents the observed value
+    :param predict: represents the predicted value
+    :param epoch:
+    :param steps:
+    :return:
+    '''
+    error = label - predict
+    average_error = np.mean(np.fabs(error.astype(float)))
+    print("mae is : %.6f" % (average_error))
+
+    rmse_error = np.sqrt(np.mean(np.square(label - predict)))
+    print("rmse is : %.6f" % (rmse_error))
+
+    cor = np.mean(np.multiply((label - np.mean(label)),
+                              (predict - np.mean(predict)))) / (np.std(predict) * np.std(label))
+    print('correlation coefficient is: %.6f' % (cor))
+
+    # mask = label != 0
+    # mape =np.mean(np.fabs((label[mask] - predict[mask]) / label[mask]))*100.0
+    # mape=np.mean(np.fabs((label - predict) / label)) * 100.0
+    # print('mape is: %.6f %' % (mape))
+    sse = np.sum((label - predict) ** 2)
+    sst = np.sum((label - np.mean(label)) ** 2)
+    R2 = 1 - sse / sst  # r2_score(y_actual, y_predicted, multioutput='raw_values')
+    print('r^2 is: %.6f' % (R2))
+
+    return average_error, rmse_error, cor, R2
+

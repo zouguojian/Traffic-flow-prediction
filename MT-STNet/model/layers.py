@@ -1,5 +1,5 @@
 # -- coding: utf-8 --
-from gcn_model.inits import *
+from model.inits import *
 import tensorflow as tf
 
 
