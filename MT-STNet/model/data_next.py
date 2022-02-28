@@ -78,7 +78,7 @@ class DataClass(object):
             yield (data[low * self.site_num : (low + self.input_length) * self.site_num, 5:6],
                    data[low * self.site_num : (low + self.input_length + self.output_length) * self.site_num, 2],
                    data[low * self.site_num : (low + self.input_length + self.output_length) * self.site_num, 3],
-                   data[low * self.site_num : (low + self.input_length + self.output_length) * self.site_num, 4],
+                   data[low * self.site_num : (low + self.input_length + self.output_length) * self.site_num, 4]//5,
                    label)
             if self.is_training:
                 low += self.step

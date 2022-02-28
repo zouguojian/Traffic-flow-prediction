@@ -281,7 +281,7 @@ class Transformer():
         self.num_blocks = 4
         self.dropout_rate = arg.dropout
 
-    def encoder(self, speed=None, day=None, hour=None, position=None):
+    def encoder(self, speed=None, day=None, hour=None, minute=None, position=None):
         '''
         :param speed: [batch , time, site num, hidden size]
         :param day: [batch , time, site num, hidden size]
@@ -294,9 +294,10 @@ class Transformer():
             self.en_emb = tf.reshape(speed, shape=[self.batch * self.input_length, self.site_num, self.hidden_units])
             day = tf.reshape(day, shape=[self.batch * self.input_length, self.site_num, self.hidden_units])
             hour = tf.reshape(hour, shape=[self.batch * self.input_length, self.site_num, self.hidden_units])
+            minute = tf.reshape(minute, shape=[self.batch * self.input_length, self.site_num, self.hidden_units])
             position = tf.reshape(position, shape=[self.batch * self.input_length, self.site_num, self.hidden_units])
             # trick
-            self.en_emb = tf.add_n([self.en_emb, day, hour])
+            self.en_emb = tf.add_n([self.en_emb, day, hour, minute])
             # self.en_emb=tf.layers.dense(tf.concat([self.en_emb,day,hour],axis=-1),units=self.hidden_units,name='add_speed_emb')
 
             self.enc = self.en_emb + position

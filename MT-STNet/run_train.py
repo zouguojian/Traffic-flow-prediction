@@ -13,21 +13,19 @@ axis=0: is nonzero values, x-axis represents Row, y-axis represents Column.
 axis=1: corresponding the nonzero value.
 axis=2: represents the sparse matrix shape.
 '''
-
 from __future__ import division
 from __future__ import print_function
 from model.utils import *
 from model.models import GCN
 from model.hyparameter import parameter
 from model.embedding import embedding
-from model.gat import Transformer
+from model.encoder import Encoder_ST
+from model.decoder import Decoder_ST
 
 import pandas as pd
 import tensorflow as tf
 import numpy as np
-import model.decoder as decoder
 import matplotlib.pyplot as plt
-import model.encoder as encoder
 import model.data_next as data_load
 import os
 import argparse
@@ -38,11 +36,11 @@ logs_path = "board"
 
 
 class Model(object):
-    def __init__(self, para):
+    def __init__(self, hp):
         '''
         :param para:
         '''
-        self.para = para         # hyperparameter
+        self.hp = hp             # hyperparameter
         self.init_gcn()          # init gcn model
         self.init_placeholder()  # init placeholder
         self.init_embed()        # init embedding
@@ -55,9 +53,9 @@ class Model(object):
         self.adj = preprocess_adj(self.adjecent())
 
         # define gcn model
-        if self.para.model_name == 'gcn_cheby':
-            self.support = chebyshev_polynomials(self.adj, self.para.max_degree)
-            self.num_supports = 1 + self.para.max_degree
+        if self.hp.model_name == 'gcn_cheby':
+            self.support = chebyshev_polynomials(self.adj, self.hp.max_degree)
+            self.num_supports = 1 + self.hp.max_degree
             self.model_func = GCN
         else:
             self.support = [self.adj]
@@ -69,17 +67,17 @@ class Model(object):
         :return:
         '''
         self.placeholders = {
-            'position': tf.placeholder(tf.int32, shape=(1, self.para.site_num), name='input_position'),
-            'day': tf.placeholder(tf.int32, shape=(None, self.para.site_num), name='input_day'),
-            'hour': tf.placeholder(tf.int32, shape=(None, self.para.site_num), name='input_hour'),
-            'minute': tf.placeholder(tf.int32, shape=(None, self.para.site_num), name='input_minute'),
+            'position': tf.placeholder(tf.int32, shape=(1, self.hp.site_num), name='input_position'),
+            'day': tf.placeholder(tf.int32, shape=(None, self.hp.site_num), name='input_day'),
+            'hour': tf.placeholder(tf.int32, shape=(None, self.hp.site_num), name='input_hour'),
+            'minute': tf.placeholder(tf.int32, shape=(None, self.hp.site_num), name='input_minute'),
             'indices_i': tf.placeholder(dtype=tf.int64, shape=[None, None], name='input_indices'),
             'values_i': tf.placeholder(dtype=tf.float32, shape=[None], name='input_values'),
             'dense_shape_i': tf.placeholder(dtype=tf.int64, shape=[None], name='input_dense_shape'),
             # None: batch size * time size
-            'features': tf.placeholder(tf.float32, shape=[None, self.para.site_num, self.para.features],
+            'features': tf.placeholder(tf.float32, shape=[None, self.hp.site_num, self.hp.features],
                                        name='input_features'),
-            'labels': tf.placeholder(tf.float32, shape=[None, self.para.site_num, self.para.output_length],
+            'labels': tf.placeholder(tf.float32, shape=[None, self.hp.site_num, self.hp.output_length],
                                      name='labels'),
             'dropout': tf.placeholder_with_default(0., shape=(), name='input_dropout'),
             'num_features_nonzero': tf.placeholder(tf.int32, name='input_zero')  # helper variable for sparse dropout
@@ -87,15 +85,14 @@ class Model(object):
 
         self.supports = [tf.SparseTensor(indices=self.placeholders['indices_i'],
                                          values=self.placeholders['values_i'],
-                                         dense_shape=self.placeholders['dense_shape_i']) for _ in
-                         range(self.num_supports)]
+                                         dense_shape=self.placeholders['dense_shape_i']) for _ in range(self.num_supports)]
 
     def adjecent(self):
         '''
         :return: adjacent matrix
         '''
-        data = pd.read_csv(filepath_or_buffer=self.para.file_adj)
-        adj = np.zeros(shape=[self.para.site_num, self.para.site_num])
+        data = pd.read_csv(filepath_or_buffer=self.hp.file_adj)
+        adj = np.zeros(shape=[self.hp.site_num, self.hp.site_num])
         for line in data[['src_FID', 'nbr_FID']].values:
             adj[line[0]][line[1]] = 1
         return adj
@@ -105,37 +102,52 @@ class Model(object):
         :return:
         '''
         with tf.variable_scope('position'):
-            p_emd = embedding(self.placeholders['position'], vocab_size=self.para.site_num,
-                              num_units=self.para.emb_size,
+            p_emd = embedding(self.placeholders['position'], vocab_size=self.hp.site_num,
+                              num_units=self.hp.emb_size,
                               scale=False, scope="position_embed")
-            p_emd = tf.reshape(p_emd, shape=[1, self.para.site_num, self.para.emb_size])
+            p_emd = tf.reshape(p_emd, shape=[1, self.hp.site_num, self.hp.emb_size])
             p_emd = tf.expand_dims(p_emd, axis=0)
-            self.p_emd = tf.tile(p_emd, [self.para.batch_size, self.para.input_length, 1, 1])
+            self.p_emd = tf.tile(p_emd, [self.hp.batch_size, self.hp.input_length, 1, 1])
             print('p_emd shape is : ', self.p_emd.shape)
 
         with tf.variable_scope('day'):
-            self.d_emb = embedding(self.placeholders['day'], vocab_size=32, num_units=self.para.emb_size,
+            self.d_emb = embedding(self.placeholders['day'], vocab_size=32, num_units=self.hp.emb_size,
                                    scale=False, scope="day_embed")
             self.d_emd = tf.reshape(self.d_emb,
-                                    shape=[self.para.batch_size, self.para.input_length + self.para.output_length,
-                                           self.para.site_num, self.para.emb_size])
+                                    shape=[self.hp.batch_size, self.hp.input_length + self.hp.output_length,
+                                           self.hp.site_num, self.hp.emb_size])
             print('d_emd shape is : ', self.d_emd.shape)
 
         with tf.variable_scope('hour'):
-            self.h_emb = embedding(self.placeholders['hour'], vocab_size=24, num_units=self.para.emb_size,
+            self.h_emb = embedding(self.placeholders['hour'], vocab_size=24, num_units=self.hp.emb_size,
                                    scale=False, scope="hour_embed")
             self.h_emd = tf.reshape(self.h_emb,
-                                    shape=[self.para.batch_size, self.para.input_length + self.para.output_length,
-                                           self.para.site_num, self.para.emb_size])
+                                    shape=[self.hp.batch_size, self.hp.input_length + self.hp.output_length,
+                                           self.hp.site_num, self.hp.emb_size])
             print('h_emd shape is : ', self.h_emd.shape)
 
         with tf.variable_scope('mimute'):
-            self.m_emb = embedding(self.placeholders['minute'], vocab_size=12, num_units=self.para.emb_size,
+            self.m_emb = embedding(self.placeholders['minute'], vocab_size=12, num_units=self.hp.emb_size,
                                    scale=False, scope="minute_embed")
             self.m_emd = tf.reshape(self.m_emb,
-                                    shape=[self.para.batch_size, self.para.input_length + self.para.output_length,
-                                           self.para.site_num, self.para.emb_size])
+                                    shape=[self.hp.batch_size, self.hp.input_length + self.hp.output_length,
+                                           self.hp.site_num, self.hp.emb_size])
             print('m_emd shape is : ', self.m_emd.shape)
+
+        '''
+        with tf.variable_scope('position_gcn'): # using the gcn to extract position relationship
+            p_emb = tf.reshape(self.p_emd, shape=[-1, self.para.site_num, self.para.emb_size])
+            p_gcn = self.model_func(self.placeholders,
+                                    input_dim=self.para.emb_size,
+                                    para=self.para,
+                                    supports=self.supports)
+            p_emd = p_gcn.predict(p_emb)
+            self.g_p_emd = tf.reshape(p_emd, shape=[self.para.batch_size,
+                                                    self.para.input_length,
+                                                    self.para.site_num,
+                                                    self.para.gcn_output_size])
+            print('p_emd shape is : ', self.g_p_emd.shape)
+        '''
 
     def model(self):
         '''
@@ -150,76 +162,19 @@ class Model(object):
             axis=2: numbers of the nodes
             axis=3: output feature size
             '''
-            with tf.variable_scope('position_gcn'): # using the gcn to extract position relationship
-                p_emb = tf.reshape(self.p_emd, shape=[-1, self.para.site_num, self.para.emb_size])
-                p_gcn = self.model_func(self.placeholders,
-                                        input_dim=self.para.emb_size,
-                                        para=self.para,
-                                        supports=self.supports)
-                p_emd = p_gcn.predict(p_emb)
-                self.g_p_emd = tf.reshape(p_emd, shape=[self.para.batch_size,
-                                                        self.para.input_length,
-                                                        self.para.site_num,
-                                                        self.para.gcn_output_size])
-                print('p_emd shape is : ', self.g_p_emd.shape)
+            features=tf.layers.dense(self.placeholders['features'], units=self.hp.emb_size) # [B*L, site num, emb_size]
+            in_day = self.d_emd[:, :self.hp.input_length, :, :]
+            in_hour = self.h_emd[:, :self.hp.input_length, :, :]
+            in_mimute = self.m_emd[:, :self.hp.input_length, :, :]
 
-            features=tf.layers.dense(self.placeholders['features'], units=self.para.emb_size) #[-1, site num, emb_size]
-            in_day = self.d_emd[:, :self.para.input_length, :, :]
-            in_hour = self.h_emd[:, :self.para.input_length, :, :]
-
-            # transformer
-            m = Transformer(self.para)
-            x = m.encoder(speed=features,day=in_day,hour=in_hour,position=self.p_emd)
-
-            features=tf.add_n(inputs=[features,
-                                      tf.reshape(in_day,[-1,self.para.site_num, self.para.emb_size]),
-                                      tf.reshape(in_hour,[-1,self.para.site_num, self.para.emb_size]),
-                                      tf.reshape(self.p_emd, [-1, self.para.site_num, self.para.emb_size])])
-
-            encoder_gcn = self.model_func(self.placeholders,
-                                          input_dim=self.para.emb_size,
-                                          para=self.para,
-                                          supports=self.supports)
-            encoder_outs = encoder_gcn.predict(features)
-            encoder_outs = tf.reshape(encoder_outs, shape=[self.para.batch_size,
-                                                           self.para.input_length,
-                                                           self.para.site_num,
-                                                           self.para.gcn_output_size])
-            print('encoder gcn outs shape is : ', encoder_outs.shape)
-
-            # this step use to encoding the input series data
-            '''
-            lstm, return --- for example ,output shape is :(32, 3, 162, 128)
-            axis=0: bath size
-            axis=1: input data time size
-            axis=2: numbers of the nodes
-            axis=3: output feature size
-            '''
-            encoder_init = encoder_lstm.lstm(self.para.batch_size * self.para.site_num,
-                                             self.para.hidden_layer,
-                                             self.para.hidden_size,
-                                             self.para.is_training,
-                                             placeholders=self.placeholders)
-
-            x = tf.reshape(x, shape=[self.para.batch_size, self.para.input_length, self.para.site_num,self.para.gcn_output_size])
-            # trick
-            inputs = tf.add_n([x, encoder_outs, self.p_emd])
-
-            x_p_1 = tf.layers.dense(self.placeholders['features_p'], units=self.para.gcn_output_size)
-            x_p = tf.expand_dims(x_p_1, axis=2)
-            x_p = tf.tile(input=x_p, multiples=[1, 1, self.para.site_num, 1])
-            inputs = tf.concat([inputs, x_p], axis=-1)
-            # inputs=inputs+x_p
-            inputs = tf.transpose(inputs, perm=[0, 2, 1, 3])
-            inputs = tf.reshape(inputs, shape=[self.para.batch_size * self.para.site_num, self.para.input_length,
-                                               2 * self.para.gcn_output_size])
-
-            h_states, c_states = encoder_init.encoding(inputs)
-            h_states = tf.reshape(h_states, shape=[self.para.batch_size, self.para.site_num, self.para.input_length,
-                                                   self.para.hidden_size])
-            h_states = tf.transpose(h_states, perm=[0, 2, 1, 3])
-
-            print('encoder h states shape is : ', h_states.shape)
+            encoder=Encoder_ST(hp=self.hp, placeholders=self.placeholders, model_func=self.model_func)
+            encoder_out=encoder.encoder_spatio_temporal(features=features,
+                                                        day=in_day,
+                                                        hour=in_hour,
+                                                        minute=in_mimute,
+                                                        position=self.p_emd,
+                                                        supports=self.supports)
+            print('encoder output shape is : ', encoder_out.shape)
 
         print('#................................in the decoder step......................................#')
         with tf.variable_scope(name_or_scope='decoder'):
@@ -230,67 +185,25 @@ class Model(object):
             axis=2: numbers of the nodes
             axis=3: output feature size
             '''
-            out_day = self.d_emd[:, self.para.input_length:, :, :]
-            out_hour = self.h_emd[:, self.para.input_length:, :, :]
+            out_day = self.d_emd[:, self.hp.input_length:, :, :]
+            out_hour = self.h_emd[:, self.hp.input_length:, :, :]
+            out_minute = self.m_emd[:, self.hp.input_length:, :, :]
 
-            decoder_gcn = self.model_func(self.placeholders,
-                                          input_dim=self.para.emb_size,
-                                          para=self.para,
-                                          supports=self.supports)
+            decoder = Decoder_ST(hp=self.hp, placeholders=self.placeholders, model_func=self.model_func)
+            self.pre=decoder.decoder_spatio_temporal(features=encoder_out,
+                                                     day=out_day,
+                                                     hour=out_hour,
+                                                     minute=out_minute,
+                                                     position=self.p_emd,
+                                                     supports=self.supports)
+            print('pres shape is : ', self.pre.shape)
 
-            # transformer
-            decoder_m = Transformer(self.para)
-
-            # this step to presict the polutant concentration
-            '''
-            decoder, return --- for example ,output shape is :(32, 162, 1)
-            axis=0: bath size
-            axis=1: numbers of the nodes
-            axis=2: label size
-            '''
-            decoder_init = decoder.lstm(self.para.batch_size * self.para.site_num,
-                                        self.para.output_length,
-                                        self.para.hidden_layer,
-                                        self.para.hidden_size,
-                                        placeholders=self.placeholders)
-
-            self.pres, self.pres_p = decoder_init.gcn_decoding(h_states,
-                                                               gcn=decoder_gcn,
-                                                               gan=decoder_m,
-                                                               site_num=self.para.site_num,
-                                                               x_p=x_p_1,
-                                                               day=out_day,
-                                                               hour=out_hour,
-                                                               position=self.p_emd)
-
-            print('pres shape is : ', self.pres.shape)
-            print('pres_p shape is : ', self.pres_p.shape)
-
-            self.loss1 = tf.reduce_mean(
-                tf.sqrt(tf.reduce_mean(tf.square(self.pres + 1e-10 - self.placeholders['labels']), axis=0)))
-            self.loss2 = tf.reduce_mean(
-                tf.sqrt(tf.reduce_mean(tf.square(self.pres_p + 1e-10 - self.placeholders['labels_p']), axis=0)))
-            # weights=tf.Variable(initial_value=tf.constant(value=0.5, dtype=tf.float32),name='loss_weight')
-
-            # self.cross_entropy = loss1 + loss2
-
-        # tf.summary.scalar('cross_entropy', self.cross_entropy)
-        tf.summary.scalar('cross_entropy', self.loss1)
-        # backprocess and update the parameters
-        # self.train_op = tf.train.AdamOptimizer(self.para.learning_rate).minimize(self.cross_entropy)
-        self.train_op_1 = tf.train.AdamOptimizer(self.para.learning_rate).minimize(self.loss1)
-        self.train_op_2 = tf.train.AdamOptimizer(self.para.learning_rate).minimize(self.loss2)
-
-        print('#...............................in the training step.....................................#')
+            self.loss = tf.reduce_mean(
+                tf.sqrt(tf.reduce_mean(tf.square(self.pre + 1e-10 - self.placeholders['labels']), axis=0)))
+        self.train_op = tf.train.AdamOptimizer(self.hp.learning_rate).minimize(self.loss)
 
     def test(self):
         '''
-        :param batch_size: usually use 1
-        :param encoder_layer:
-        :param decoder_layer:
-        :param encoder_nodes:
-        :param prediction_size:
-        :param is_training: False
         :return:
         '''
         model_file = tf.train.latest_checkpoint('weights/')
@@ -300,7 +213,6 @@ class Model(object):
         '''
         :param label:
         :param predict:
-        :param prediction_size:
         :return:
         '''
         plt.figure()
@@ -329,31 +241,23 @@ class Model(object):
 
         max_rmse = 100
         self.sess.run(tf.global_variables_initializer())
-        merged = tf.summary.merge_all()
-        writer = tf.summary.FileWriter(logs_path, graph=tf.get_default_graph())
 
-        self.iterate = data_load.DataClass(hp=self.para)
+        iterate = data_load.DataClass(hp=self.hp)
+        next_elements = iterate.next_batch(batch_size=self.hp.batch_size, epoch=self.hp.epoch, is_training=True)
 
-        iterate = self.iterate
-        next_elements = iterate.next_batch(batch_size=self.para.batch_size, epoch=self.para.epoch, is_training=True)
-
-        for i in range(int((iterate.length // self.para.site_num * iterate.data_divide - (
-                iterate.time_size + iterate.prediction_size)) // iterate.window_step)
-                       * self.para.epochs // self.para.batch_size):
+        for i in range(int((iterate.length // self.hp.site_num * iterate.divide_ratio - (
+                iterate.input_length + iterate.output_length)) // iterate.step)
+                       * self.hp.epoch // self.hp.batch_size):
 
             x, day, hour, label, x_p, label_p = self.sess.run(next_elements)
-            features = np.reshape(x, [-1, self.para.site_num, self.para.features])
-            day = np.reshape(day, [-1, self.para.site_num])
-            hour = np.reshape(hour, [-1, self.para.site_num])
+            features = np.reshape(x, [-1, self.hp.site_num, self.hp.features])
+            day = np.reshape(day, [-1, self.hp.site_num])
+            hour = np.reshape(hour, [-1, self.hp.site_num])
             feed_dict = construct_feed_dict(features, self.adj, label, day, hour, x_p, label_p, self.placeholders)
-            feed_dict.update({self.placeholders['dropout']: self.para.dropout})
+            feed_dict.update({self.placeholders['dropout']: self.hp.dropout})
 
-            # summary, loss, _ = self.sess.run((merged, self.cross_entropy, self.train_op), feed_dict=feed_dict)
-
-            # summary, loss, _ = self.sess.run((merged, self.loss1, self.train_op_1), feed_dict=feed_dict)
-            loss_2, _ = self.sess.run((self.loss2, self.train_op_2), feed_dict=feed_dict)
-            print("after %d steps,the training average loss value is : %.6f" % (i, loss_2))
-            # writer.add_summary(summary, loss)
+            loss, _ = self.sess.run((self.loss, self.train_op), feed_dict=feed_dict)
+            print("after %d steps,the training average loss value is : %.6f" % (i, loss))
 
             # validate processing
             if i % 10 == 0:
@@ -362,7 +266,7 @@ class Model(object):
                 if max_rmse > rmse_error:
                     print("the validate average rmse loss value is : %.6f" % (rmse_error))
                     max_rmse = rmse_error
-                    self.saver.save(self.sess, save_path=self.para.save_path + 'model.ckpt')
+                    self.saver.save(self.sess, save_path=self.hp.save_path + 'model.ckpt')
 
                     # if os.path.exists('model_pb'): shutil.rmtree('model_pb')
                     # builder = tf.saved_model.builder.SavedModelBuilder('model_pb')
@@ -379,58 +283,47 @@ class Model(object):
         predict_list = list()
 
         # with tf.Session() as sess:
-        model_file = tf.train.latest_checkpoint(self.para.save_path)
-        if not self.para.is_training:
+        model_file = tf.train.latest_checkpoint(self.hp.save_path)
+        if not self.hp.is_training:
             print('the model weights has been loaded:')
             self.saver.restore(self.sess, model_file)
 
             self.saver.save(self.sess, save_path='gcn/model/' + 'model.ckpt')
 
-        self.iterate_test = data_load.DataClass(hp=self.para)
+        self.iterate_test = data_load.DataClass(hp=self.hp)
         iterate_test = self.iterate_test
-        next_ = iterate_test.next_batch(batch_size=self.para.batch_size, epoch=1, is_training=False)
-        max, min = iterate_test.max_list_p[1], iterate_test.min_list_p[1]
+        next_ = iterate_test.next_batch(batch_size=self.hp.batch_size, epoch=1, is_training=False)
+        max, min = iterate_test.max_dict['flow'], iterate_test.min_dict['flow']
 
         # '''
-        for i in range(int((iterate_test.length // self.para.site_num
-                            - iterate_test.length // self.para.site_num * iterate_test.data_divide
+        for i in range(int((iterate_test.length // self.hp.site_num
+                            - iterate_test.length // self.hp.site_num * iterate_test.divide_ratio
                             - (
-                                    iterate_test.time_size + iterate_test.prediction_size)) // iterate_test.prediction_size) // self.para.batch_size):
+                                    iterate_test.input_length + iterate_test.output_length)) // iterate_test.prediction_size) // self.hp.batch_size):
             x, day, hour, label, x_p, label_p = self.sess.run(next_)
-            features = np.reshape(x, [-1, self.para.site_num, self.para.features])
-            day = np.reshape(day, [-1, self.para.site_num])
-            hour = np.reshape(hour, [-1, self.para.site_num])
+            features = np.reshape(x, [-1, self.hp.site_num, self.hp.features])
+            day = np.reshape(day, [-1, self.hp.site_num])
+            hour = np.reshape(hour, [-1, self.hp.site_num])
 
             feed_dict = construct_feed_dict(features, self.adj, label, day, hour, x_p, label_p, self.placeholders)
             feed_dict.update({self.placeholders['dropout']: 0.0})
 
-            pre = self.sess.run((self.pres_p), feed_dict=feed_dict)
-            label_list.append(label_p)
+            pre = self.sess.run((self.pres), feed_dict=feed_dict)
+            label_list.append(label)
             predict_list.append(pre)
 
         label_list = np.reshape(np.array(label_list, dtype=np.float32),
-                                [-1])
+                                [-1, self.hp.site_num, self.hp.output_length]).transpose([1, 0, 2])
         predict_list = np.reshape(np.array(predict_list, dtype=np.float32),
-                                  [-1])
-        if self.para.normalize:
-            label_list = np.array(self.re_current(label_list, max, min))
-            predict_list = np.array(self.re_current(predict_list, max, min))
+                                  [-1, self.hp.site_num, self.hp.output_length]).transpose([1, 0, 2])
+        if self.hp.normalize:
+            label_list = np.array(
+                [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in label_list])
+            predict_list = np.array(
+                [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in predict_list])
         else:
             label_list = np.array([np.reshape(site_label, [-1]) for site_label in label_list])
             predict_list = np.array([np.reshape(site_label, [-1]) for site_label in predict_list])
-
-        # label_list = np.reshape(np.array(label_list, dtype=np.float32),
-        #                         [-1, self.para.site_num, self.para.output_length]).transpose([1, 0, 2])
-        # predict_list = np.reshape(np.array(predict_list, dtype=np.float32),
-        #                           [-1, self.para.site_num, self.para.output_length]).transpose([1, 0, 2])
-        # if self.para.normalize:
-        #     label_list = np.array(
-        #         [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in label_list])
-        #     predict_list = np.array(
-        #         [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in predict_list])
-        # else:
-        #     label_list = np.array([np.reshape(site_label, [-1]) for site_label in label_list])
-        #     predict_list = np.array([np.reshape(site_label, [-1]) for site_label in predict_list])
 
         label_list = np.reshape(label_list, [-1])
         predict_list = np.reshape(predict_list, [-1])
