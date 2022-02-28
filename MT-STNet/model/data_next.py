@@ -22,7 +22,7 @@ class DataClass(object):
         self.file_train_path= hp.file_train
         self.normalize = hp.normalize             # data normalization
 
-        self.get_data(train_file)
+        self.get_data(self.hp.file_train)
         self.length=self.data.shape[0]                        # data length
         self.get_max_min(self.data)                           # max and min values' dictionary
         self.normalization(self.data, ['flow'], hp.normalize) # normalization

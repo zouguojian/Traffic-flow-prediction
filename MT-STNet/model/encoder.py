@@ -43,5 +43,4 @@ class Encoder_ST(object):
         # trick
         # encoder_out = tf.add_n([x, encoder_outs, self.p_emd])
         encoder_out = x
-
-        print('encoder output shape is : ', encoder_out.shape)
+        return encoder_out

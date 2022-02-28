@@ -236,28 +236,26 @@ class Model(object):
 
     def run_epoch(self):
         '''
-        from now on,the model begin to training, until the epoch to 100
+        :return:
         '''
-
         max_rmse = 100
         self.sess.run(tf.global_variables_initializer())
 
         iterate = data_load.DataClass(hp=self.hp)
-        next_elements = iterate.next_batch(batch_size=self.hp.batch_size, epoch=self.hp.epoch, is_training=True)
+        train_next = iterate.next_batch(batch_size=self.hp.batch_size, epoch=self.hp.epoch, is_training=True)
 
         for i in range(int((iterate.length // self.hp.site_num * iterate.divide_ratio - (
                 iterate.input_length + iterate.output_length)) // iterate.step)
                        * self.hp.epoch // self.hp.batch_size):
-
-            x, day, hour, label, x_p, label_p = self.sess.run(next_elements)
+            x, day, hour, minute, label = self.sess.run(train_next)
             features = np.reshape(x, [-1, self.hp.site_num, self.hp.features])
             day = np.reshape(day, [-1, self.hp.site_num])
             hour = np.reshape(hour, [-1, self.hp.site_num])
-            feed_dict = construct_feed_dict(features, self.adj, label, day, hour, x_p, label_p, self.placeholders)
+            minute = np.reshape(minute, [-1, self.hp.site_num])
+            feed_dict = construct_feed_dict(features, self.adj, label, day, hour, minute, self.placeholders, site_num=self.hp.site_num)
             feed_dict.update({self.placeholders['dropout']: self.hp.dropout})
-
-            loss, _ = self.sess.run((self.loss, self.train_op), feed_dict=feed_dict)
-            print("after %d steps,the training average loss value is : %.6f" % (i, loss))
+            loss_, _ = self.sess.run((self.loss, self.train_op), feed_dict=feed_dict)
+            print("after %d steps,the training average loss value is : %.6f" % (i, loss_))
 
             # validate processing
             if i % 10 == 0:
@@ -287,28 +285,27 @@ class Model(object):
         if not self.hp.is_training:
             print('the model weights has been loaded:')
             self.saver.restore(self.sess, model_file)
-
             self.saver.save(self.sess, save_path='gcn/model/' + 'model.ckpt')
 
-        self.iterate_test = data_load.DataClass(hp=self.hp)
-        iterate_test = self.iterate_test
-        next_ = iterate_test.next_batch(batch_size=self.hp.batch_size, epoch=1, is_training=False)
+        iterate_test = data_load.DataClass(hp=self.hp)
+        test_next = iterate_test.next_batch(batch_size=self.hp.batch_size, epoch=1, is_training=False)
         max, min = iterate_test.max_dict['flow'], iterate_test.min_dict['flow']
 
         # '''
         for i in range(int((iterate_test.length // self.hp.site_num
                             - iterate_test.length // self.hp.site_num * iterate_test.divide_ratio
-                            - (
-                                    iterate_test.input_length + iterate_test.output_length)) // iterate_test.prediction_size) // self.hp.batch_size):
-            x, day, hour, label, x_p, label_p = self.sess.run(next_)
+                            - (iterate_test.input_length + iterate_test.output_length)) // iterate_test.output_length)
+                       // self.hp.batch_size):
+            x, day, hour, minute, label = self.sess.run(test_next)
             features = np.reshape(x, [-1, self.hp.site_num, self.hp.features])
             day = np.reshape(day, [-1, self.hp.site_num])
             hour = np.reshape(hour, [-1, self.hp.site_num])
+            minute = np.reshape(minute, [-1, self.hp.site_num])
 
-            feed_dict = construct_feed_dict(features, self.adj, label, day, hour, x_p, label_p, self.placeholders)
+            feed_dict = construct_feed_dict(features, self.adj, label, day, hour, minute, self.placeholders, site_num=self.hp.site_num)
             feed_dict.update({self.placeholders['dropout']: 0.0})
 
-            pre = self.sess.run((self.pres), feed_dict=feed_dict)
+            pre = self.sess.run((self.pre), feed_dict=feed_dict)
             label_list.append(label)
             predict_list.append(pre)
 
