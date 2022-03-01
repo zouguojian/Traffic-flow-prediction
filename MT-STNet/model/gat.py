@@ -277,8 +277,8 @@ class Transformer():
         self.input_length = arg.input_length
         self.site_num = arg.site_num
 
-        self.num_heads = 8
-        self.num_blocks = 4
+        self.num_heads = arg.num_heads
+        self.num_blocks = arg.num_blocks
         self.dropout_rate = arg.dropout
 
     def encoder(self, speed=None, day=None, hour=None, minute=None, position=None):

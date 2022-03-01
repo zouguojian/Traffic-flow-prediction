@@ -16,6 +16,8 @@ class parameter(object):
         self.parser.add_argument('--learning_rate', type=float, default=0.0005, help='learning rate')
         self.parser.add_argument('--dropout', type=float, default=0.5, help='drop out')
         self.parser.add_argument('--site_num', type=int, default=66, help='total number of road')
+        self.parser.add_argument('--num_heads', type=int, default=1, help='total number of head attentions')
+        self.parser.add_argument('--num_blocks', type=int, default=1, help='total number of attention layers')
 
         #每个点表示一个监测站点，目前66个监测站点
         self.parser.add_argument('--emb_size', type=int, default=64, help='embedding size')
