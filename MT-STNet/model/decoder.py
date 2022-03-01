@@ -88,7 +88,7 @@ class Decoder_ST(object):
                                       para=self.hp,
                                       supports=supports)
         '''
-        m = Transformer(self.hp)
+        # m = Transformer(self.hp)
 
         input_features=tf.reshape(tf.transpose(features, perm=[0, 2, 1, 3]),shape=[-1, self.hp.input_length, self.hp.emb_size]) # 3-D
         for i in range(self.hp.output_length):
@@ -105,7 +105,7 @@ class Decoder_ST(object):
             # x = m.encoder(speed=features, day=day, hour=hour, minute=minute, position=position)
             t_features = t_attention(hiddens=input_features, hidden=pre_features, hidden_units=self.hp.emb_size)  # temporal attention
             t_features=tf.reshape(t_features,shape=[-1, self.hp.site_num, self.hp.emb_size])
-            results = tf.layers.dense(inputs=t_features, units=1, name='layer', reuse=tf.AUTO_REUSE, activation=tf.nn.relu)
+            results = tf.layers.dense(inputs=t_features, units=1, name='layer', reuse=tf.AUTO_REUSE)
             pre=tf.reshape(results,shape=[-1,self.hp.site_num])
 
             # to store the prediction results for road nodes on each time

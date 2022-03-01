@@ -6,7 +6,7 @@ class parameter(object):
         self.parser=parser
 
         self.parser.add_argument('--save_path', type=str, default='gcn/', help='save path')
-        self.parser.add_argument('--model_name', type=str, default='gcn', help='training or testing model name')
+        self.parser.add_argument('--model_name', type=str, default='lstm', help='training or testing model name')
 
         self.parser.add_argument('--divide_ratio', type=float, default=0.8, help='data_divide')
         self.parser.add_argument('--is_training', type=bool, default=True, help='is training')

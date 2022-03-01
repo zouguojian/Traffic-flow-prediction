@@ -21,6 +21,7 @@ from model.hyparameter import parameter
 from model.embedding import embedding
 from model.encoder import Encoder_ST
 from model.decoder import Decoder_ST
+from baseline.lstm import LstmClass
 
 import pandas as pd
 import tensorflow as tf
@@ -154,52 +155,41 @@ class Model(object):
         :return:
         '''
         print('#................................in the encoder step......................................#')
-        with tf.variable_scope(name_or_scope='encoder'):
+
+        if self.hp.model_name=='lstm':
+            # features=tf.layers.dense(self.placeholders['features'], units=self.para.emb_size) #[-1, site num, emb_size]
+            features = tf.reshape(self.placeholders['features'], shape=[self.hp.batch_size,
+                                                                         self.hp.input_length,
+                                                                         self.hp.site_num,
+                                                                         self.hp.features])
+
+            # this step use to encoding the input series data
             '''
-            return, the gcn output --- for example, inputs.shape is :  (32, 3, 162, 32)
+            lstm, return --- for example ,output shape is :(32, 3, 162, 128)
             axis=0: bath size
             axis=1: input data time size
             axis=2: numbers of the nodes
             axis=3: output feature size
             '''
-            features=tf.layers.dense(self.placeholders['features'], units=self.hp.emb_size) # [B*L, site num, emb_size]
-            in_day = self.d_emd[:, :self.hp.input_length, :, :]
-            in_hour = self.h_emd[:, :self.hp.input_length, :, :]
-            in_mimute = self.m_emd[:, :self.hp.input_length, :, :]
+            encoder_init = LstmClass(self.hp.batch_size * self.hp.site_num,
+                                    predict_time=self.hp.output_length,
+                                    layer_num=self.hp.hidden_layer,
+                                    nodes=self.hp.emb_size,
+                                    placeholders=self.placeholders)
 
-            encoder=Encoder_ST(hp=self.hp, placeholders=self.placeholders, model_func=self.model_func)
-            encoder_out=encoder.encoder_spatio_temporal(features=features,
-                                                        day=in_day,
-                                                        hour=in_hour,
-                                                        minute=in_mimute,
-                                                        position=self.p_emd,
-                                                        supports=self.supports)
-            print('encoder output shape is : ', encoder_out.shape)
+            inputs = tf.transpose(features, perm=[0, 2, 1, 3])
+            inputs = tf.reshape(inputs, shape=[self.hp.batch_size * self.hp.site_num, self.hp.input_length,
+                                               self.hp.features])
+            h_states= encoder_init.encoding(inputs)
 
-        print('#................................in the decoder step......................................#')
-        with tf.variable_scope(name_or_scope='decoder'):
-            '''
-            return, the gcn output --- for example, inputs.shape is :  (32, 1, 162, 32)
-            axis=0: bath size
-            axis=1: input data time size
-            axis=2: numbers of the nodes
-            axis=3: output feature size
-            '''
-            out_day = self.d_emd[:, self.hp.input_length:, :, :]
-            out_hour = self.h_emd[:, self.hp.input_length:, :, :]
-            out_minute = self.m_emd[:, self.hp.input_length:, :, :]
-
-            decoder = Decoder_ST(hp=self.hp, placeholders=self.placeholders, model_func=self.model_func)
-            self.pre=decoder.decoder_spatio_temporal(features=encoder_out,
-                                                     day=out_day,
-                                                     hour=out_hour,
-                                                     minute=out_minute,
-                                                     position=self.p_emd,
-                                                     supports=self.supports)
+            # decoder
+            print('#................................in the decoder step......................................#')
+            # this step to presict the polutant concentration
+            self.pre=encoder_init.decoding(h_states, self.hp.site_num)
             print('pres shape is : ', self.pre.shape)
 
-            self.loss = tf.reduce_mean(
-                tf.sqrt(tf.reduce_mean(tf.square(self.pre + 1e-10 - self.placeholders['labels']), axis=0)))
+        self.loss = tf.reduce_mean(
+            tf.sqrt(tf.reduce_mean(tf.square(self.pre + 1e-10 - self.placeholders['labels']), axis=0)))
         self.train_op = tf.train.AdamOptimizer(self.hp.learning_rate).minimize(self.loss)
 
     def test(self):
