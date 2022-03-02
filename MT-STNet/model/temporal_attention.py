@@ -167,7 +167,7 @@ def label_smoothing(inputs, epsilon=0.1):
 
 
 
-def t_attention(hiddens, hidden, hidden_units=64, num_heads=1, num_blocks = 4, dropout_rate = 0.0):
+def t_attention(hiddens, hidden, hidden_units=64, num_heads=8, num_blocks = 4, dropout_rate = 0.0):
     '''
     :param hiddens: [batch , input_length, site num, hidden size]
     :param hidden: [batch , 1, site num, hidden size]

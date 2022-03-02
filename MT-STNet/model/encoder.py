@@ -20,8 +20,16 @@ class Encoder_ST(object):
         :param position:
         :return:
         '''
+
+        x = tf.reshape(features, shape=[self.hp.batch_size, self.hp.input_length, self.hp.site_num, self.hp.emb_size])
+        x = tf.reshape(tf.transpose(x, perm=[0, 2, 1, 3]),shape=[-1, self.hp.input_length, self.hp.emb_size])
+        x = t_attention(hiddens=x, hidden=x, hidden_units=self.hp.emb_size,num_heads=self.hp.num_heads,num_blocks=self.hp.num_blocks) # temporal attention
+        x = tf.reshape(x, shape=[-1, self.hp.site_num, self.hp.input_length, self.hp.emb_size])
+        x = tf.transpose(x, perm=[0, 2, 1, 3])
+        features = tf.reshape(x, shape=[-1, self.hp.site_num, self.hp.emb_size])
+
         m = Transformer(self.hp)
-        x = m.encoder(speed=features, day=day, hour=hour, minute=minute, position=position)
+        x = m.encoder(speed=features, day=day, hour=hour, minute=minute, position=position) # spatial attention
 
         '''
         features=tf.add_n(inputs=[features,
@@ -40,12 +48,7 @@ class Encoder_ST(object):
         print('encoder gcn outs shape is : ', encoder_outs.shape)
         '''
 
-        x = tf.reshape(x, shape=[self.hp.batch_size, self.hp.input_length, self.hp.site_num, self.hp.gcn_output_size])
-
-        x = tf.reshape(tf.transpose(x, perm=[0, 2, 1, 3]),shape=[-1, self.hp.input_length, self.hp.emb_size])
-        x = t_attention(hiddens=x, hidden=x, hidden_units=self.hp.emb_size) # temporal attention
-        x = tf.reshape(x, shape=[-1, self.hp.site_num, self.hp.input_length, self.hp.emb_size])
-        x=tf.transpose(x, perm=[0, 2, 1, 3])
+        x = tf.reshape(x, shape=[self.hp.batch_size, self.hp.input_length, self.hp.site_num, self.hp.emb_size])
         # trick
         # encoder_out = tf.add_n([x, encoder_outs, self.p_emd])
         encoder_out = x
