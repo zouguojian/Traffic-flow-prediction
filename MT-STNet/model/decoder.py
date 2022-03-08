@@ -89,8 +89,7 @@ class Decoder_ST(object):
                                       supports=supports)
         '''
         # m = Transformer(self.hp)
-
-        input_features=tf.reshape(tf.transpose(features, perm=[0, 2, 1, 3]),shape=[-1, self.hp.input_length, self.hp.emb_size]) # 3-D
+        features = tf.reshape(tf.transpose(features, perm=[0, 2, 1, 3]), shape=[-1, self.hp.input_length, self.hp.emb_size])  # 3-D
         for i in range(self.hp.output_length):
             o_day = day[:, i:i+1, :, :]
             o_hour = hour[:, i:i+1, :, :]
@@ -99,12 +98,24 @@ class Decoder_ST(object):
             pre_features=tf.add_n([o_day, o_hour, o_minute])
             pre_features=tf.reshape(tf.transpose(pre_features, perm=[0, 2, 1, 3]),shape=[-1, 1, self.hp.emb_size]) #3-D
 
-            print('in the decoder step, the input_features shape is : ', input_features.shape)
+            print('in the decoder step, the input_features shape is : ', features.shape)
             print('in the decoder step, the pre_features shape is : ', pre_features.shape)
 
             # x = m.encoder(speed=features, day=day, hour=hour, minute=minute, position=position)
-            t_features = t_attention(hiddens=input_features, hidden=pre_features, hidden_units=self.hp.emb_size,dropout_rate = self.hp.dropout, is_training=self.hp.is_training)  # temporal attention
+            t_features = t_attention(hiddens=features,
+                                     hidden=pre_features,
+                                     hidden_units=self.hp.emb_size,
+                                     dropout_rate = self.hp.dropout,
+                                     is_training=self.hp.is_training)  # temporal attention, shape is [-1, length, hidden_size]
             # ,num_heads=self.hp.num_heads,num_blocks=self.hp.num_blocks
+
+            features = tf.concat([features, t_features], axis=1)
+
+            t_features = tf.squeeze(t_features)
+
+            m = Transformer(self.hp)
+            x = m.encoder(speed=t_features, day=o_day, hour=o_hour, minute=o_minute, position=position)  # spatial attention
+
             t_features=tf.reshape(t_features,shape=[-1, self.hp.site_num, self.hp.emb_size])
             results = tf.layers.dense(inputs=t_features, units=1, name='layer', reuse=tf.AUTO_REUSE)
             pre=tf.reshape(results,shape=[-1,self.hp.site_num])
