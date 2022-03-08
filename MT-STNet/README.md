@@ -36,4 +36,9 @@ R<sup>2</sup> is: 0.949472
 RMSE is : 9.063117  
 R is: 0.974713  
 R<sup>2</sup> is: 0.949162  
+
+### GMAN
+
+> embedding size is 256  
+
  
