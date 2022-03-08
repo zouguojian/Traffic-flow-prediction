@@ -1,6 +1,5 @@
 # -- coding: utf-8 --
-import tensorflow.compat.v1 as tf
-tf.disable_v2_behavior()
+import tensorflow as tf
 
 def normalize(inputs,
               epsilon=1e-8,
@@ -38,7 +37,7 @@ def multihead_attention(queries,
                         num_heads=8,
                         scope="multihead_attention",
                         reuse=tf.AUTO_REUSE,
-                        dropout_rate=0,
+                        dropout_rate=0.,
                         is_training=False):
     '''Applies multihead attention.
 

@@ -3,7 +3,7 @@ from model.gat import Transformer
 import tensorflow as tf
 from model.temporal_attention import t_attention
 
-class Encoder_ST(object):
+class Decoder_ST(object):
     def __init__(self, hp, placeholders=None, model_func=None):
         '''
         :param hp:
@@ -12,7 +12,68 @@ class Encoder_ST(object):
         self.placeholders=placeholders
         self.model_func=model_func
 
-    def encoder_spatio_temporal(self, features=None, day=None, hour=None, minute=None, position=None, supports=None):
+    def attention(self, h_t, encoder_hs):
+        '''
+        h_t for decoder, the shape is [batch, 1, h]
+        encoder_hs for encoder, the shape is [batch, time ,h]
+        :param h_t:
+        :param encoder_hs:
+        :return: [None, hidden size]
+        '''
+        scores = tf.reduce_sum(tf.multiply(encoder_hs, tf.tile(h_t,multiples=[1,encoder_hs.shape[1],1])), 2)
+        a_t = tf.nn.softmax(scores)  # [batch, time]
+        a_t = tf.expand_dims(a_t, 2) # [batch, time, 1]
+        c_t = tf.matmul(tf.transpose(encoder_hs, perm=[0,2,1]), a_t) #[batch ,h , 1]
+        c_t = tf.squeeze(c_t, axis=2) #[batch, h]]
+        h_t=tf.squeeze(h_t,axis=1)
+        h_tld  = tf.layers.dense(tf.concat([h_t, c_t], axis=1),units=c_t.shape[-1],activation=tf.nn.relu) #[batch, h]
+        return h_tld
+
+    def decoding(self, encoder_hs, gcn=None, gan=None, site_num=None, x_p=None, day=None, hour=None, position=None):
+        '''
+        :param encoder_hs: [batch, time ,site num, hidden size]
+        :param gcn:
+        :param site_num:
+        :return: [batch, site num, prediction size], [batch, prediction size]
+        '''
+        pres = list()
+        shape=encoder_hs.shape
+        h_states=encoder_hs[:,-1,:,:]
+        encoder_hs = tf.reshape(tf.transpose(encoder_hs, perm=[0, 2, 1, 3]),shape=[shape[0] * shape[2], shape[1], shape[3]])
+
+        for i in range(self.hp.output_length):
+            # gcn for decoder processing, there is no question
+            out_day=day[:,i,:,:]
+            out_hour=hour[:,i,:,:]
+            h_states = tf.layers.dense(inputs=h_states, units=out_day.shape[-1], reuse=tf.AUTO_REUSE)
+            features=tf.add_n([h_states,out_day,out_hour,position[:,-1,:,:]])
+
+            gcn_outs = gcn.predict(features) # gcn
+
+            gan.input_length=1
+            x = gan.encoder(speed=h_states, day=out_day, hour=out_hour, position=position[:,-1,:,:]) # gan
+
+            features=tf.add_n([gcn_outs, x, position[:,-1,:,:]])
+            features = tf.reshape(features, shape=[self.hp.batch_size, 1, features.shape[-1]])
+
+            print('features shape is : ',features.shape)
+
+            h_state, state = None, None
+            initial_state = state
+
+            # compute the attention state
+            h_state = t_attention(hiddens=encoder_hs, hidden=h_state, hidden_units=shape[-1])  # attention # 注意修改
+            # h_state = self.attention(h_t=h_state, encoder_hs=encoder_hs)  # attention
+            h_states=tf.reshape(h_state,shape=[-1,site_num,128])
+
+            results = tf.layers.dense(inputs=h_state, units=1, name='layer', reuse=tf.AUTO_REUSE, activation=tf.nn.relu)
+            pre=tf.reshape(results,shape=[-1,site_num])
+            # to store the prediction results for road nodes on each time
+            pres.append(tf.expand_dims(pre, axis=-1))
+
+        return tf.concat(pres, axis=-1,name='output_y')
+
+    def decoder_spatio_temporal(self, features=None, day=None, hour=None, minute=None, position=None, supports=None):
         '''
         :param flow:
         :param day:
@@ -20,43 +81,35 @@ class Encoder_ST(object):
         :param position:
         :return:
         '''
-
-        x = tf.reshape(features, shape=[self.hp.batch_size, self.hp.input_length, self.hp.site_num, self.hp.emb_size])
-        # date=tf.add_n([day,hour,minute])
-        # x = tf.concat([tf.expand_dims(tf.reshape(features,[-1, self.hp.emb_size]),axis=1),tf.expand_dims(tf.reshape(date, [-1, self.hp.emb_size]), axis=1)],axis=1)
-        # x = tf.layers.conv1d(x,filters=self.hp.emb_size,kernel_size=2,strides=1,padding='valid')
-        # print('after 1d convolutional operation, the x output shape is : ',x.shape)
-        # x = tf.reshape(x, shape=[self.hp.batch_size, self.hp.input_length, self.hp.site_num, self.hp.emb_size])
-
-        x = tf.reshape(tf.transpose(x, perm=[0, 2, 1, 3]),shape=[-1, self.hp.input_length, self.hp.emb_size])
-        x = t_attention(hiddens=x, hidden=x, hidden_units=self.hp.emb_size) # temporal attention
-        # ,num_heads=self.hp.num_heads,num_blocks=self.hp.num_blocks
-        x = tf.reshape(x, shape=[-1, self.hp.site_num, self.hp.input_length, self.hp.emb_size])
-        x = tf.transpose(x, perm=[0, 2, 1, 3])
-        features = tf.reshape(x, shape=[-1, self.hp.site_num, self.hp.emb_size])
-
-        m = Transformer(self.hp)
-        x = m.encoder(speed=features, day=day, hour=hour, minute=minute, position=position) # spatial attention
-
+        pres = list()
         '''
-        features=tf.add_n(inputs=[features,
-                                  tf.reshape(day,[-1,self.hp.site_num, self.hp.emb_size]),
-                                  tf.reshape(hour,[-1,self.hp.site_num, self.hp.emb_size])])
-
-        encoder_gcn = self.model_func(self.placeholders,
+        decoder_gcn = self.model_func(self.placeholders,
                                       input_dim=self.hp.emb_size,
                                       para=self.hp,
                                       supports=supports)
-        encoder_outs = encoder_gcn.predict(features)
-        encoder_outs = tf.reshape(encoder_outs, shape=[self.hp.batch_size,
-                                                       self.hp.input_length,
-                                                       self.hp.site_num,
-                                                       self.hp.gcn_output_size])
-        print('encoder gcn outs shape is : ', encoder_outs.shape)
         '''
+        # m = Transformer(self.hp)
 
-        x = tf.reshape(x, shape=[self.hp.batch_size, self.hp.input_length, self.hp.site_num, self.hp.emb_size])
-        # trick
-        # encoder_out = tf.add_n([x, encoder_outs, self.p_emd])
-        encoder_out = x
-        return encoder_out
+        input_features=tf.reshape(tf.transpose(features, perm=[0, 2, 1, 3]),shape=[-1, self.hp.input_length, self.hp.emb_size]) # 3-D
+        for i in range(self.hp.output_length):
+            o_day = day[:, i:i+1, :, :]
+            o_hour = hour[:, i:i+1, :, :]
+            o_minute = minute[:, i:1+1, :, :]
+
+            pre_features=tf.add_n([o_day, o_hour, o_minute])
+            pre_features=tf.reshape(tf.transpose(pre_features, perm=[0, 2, 1, 3]),shape=[-1, 1, self.hp.emb_size]) #3-D
+
+            print('in the decoder step, the input_features shape is : ', input_features.shape)
+            print('in the decoder step, the pre_features shape is : ', pre_features.shape)
+
+            # x = m.encoder(speed=features, day=day, hour=hour, minute=minute, position=position)
+            t_features = t_attention(hiddens=input_features, hidden=pre_features, hidden_units=self.hp.emb_size,dropout_rate = self.hp.dropout, is_training=self.hp.is_training)  # temporal attention
+            # ,num_heads=self.hp.num_heads,num_blocks=self.hp.num_blocks
+            t_features=tf.reshape(t_features,shape=[-1, self.hp.site_num, self.hp.emb_size])
+            results = tf.layers.dense(inputs=t_features, units=1, name='layer', reuse=tf.AUTO_REUSE)
+            pre=tf.reshape(results,shape=[-1,self.hp.site_num])
+
+            # to store the prediction results for road nodes on each time
+            pres.append(tf.expand_dims(pre, axis=-1))
+
+        return tf.concat(pres, axis=-1, name='output_y')
