@@ -1,5 +1,5 @@
 # -- coding: utf-8 --
-from model.gat import Transformer
+from model.spatial_attention import Transformer
 import tensorflow as tf
 from model.temporal_attention import t_attention
 
@@ -108,13 +108,17 @@ class Decoder_ST(object):
                                      dropout_rate = self.hp.dropout,
                                      is_training=self.hp.is_training)  # temporal attention, shape is [-1, length, hidden_size]
             # ,num_heads=self.hp.num_heads,num_blocks=self.hp.num_blocks
-
             features = tf.concat([features, t_features], axis=1)
 
-            t_features = tf.squeeze(t_features)
+            # t_features = tf.squeeze(t_features)
 
             m = Transformer(self.hp)
-            x = m.encoder(speed=t_features, day=o_day, hour=o_hour, minute=o_minute, position=position)  # spatial attention
+            x = m.encoder(inputs=t_features,
+                          input_length=1,
+                          day=o_day,
+                          hour=o_hour,
+                          minute=o_minute,
+                          position=position)  # spatial attention
 
             t_features=tf.reshape(t_features,shape=[-1, self.hp.site_num, self.hp.emb_size])
             results = tf.layers.dense(inputs=t_features, units=1, name='layer', reuse=tf.AUTO_REUSE)

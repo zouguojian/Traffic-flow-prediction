@@ -1,5 +1,5 @@
 # -- coding: utf-8 --
-from model.gat import Transformer
+from model.spatial_attention import Transformer
 import tensorflow as tf
 from model.temporal_attention import t_attention
 
@@ -36,7 +36,12 @@ class Encoder_ST(object):
         features = tf.reshape(x, shape=[-1, self.hp.site_num, self.hp.emb_size])
 
         m = Transformer(self.hp)
-        x = m.encoder(speed=features, day=day, hour=hour, minute=minute, position=position) # spatial attention
+        x = m.encoder(inputs=features,
+                      input_length=self.hp.input_length,
+                      day=day,
+                      hour=hour,
+                      minute=minute,
+                      position=position) # spatial attention
 
         '''
         features=tf.add_n(inputs=[features,

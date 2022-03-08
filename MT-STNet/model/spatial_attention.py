@@ -274,14 +274,13 @@ class Transformer():
         self.is_training = arg.is_training
         self.hidden_units = arg.emb_size
         self.batch = arg.batch_size
-        self.input_length = arg.input_length
         self.site_num = arg.site_num
 
         self.num_heads = arg.num_heads
         self.num_blocks = arg.num_blocks
         self.dropout_rate = arg.dropout
 
-    def encoder(self, inputs=None, day=None, hour=None, minute=None, position=None):
+    def encoder(self, inputs=None, input_length=1, day=None, hour=None, minute=None, position=None):
         '''
         :param inputs: [batch , time, site num, hidden size]
         :param day: [batch , time, site num, hidden size]
@@ -291,11 +290,11 @@ class Transformer():
         # Encoder
         with tf.variable_scope("encoder"):
             # embedding
-            self.en_emb = tf.reshape(inputs, shape=[self.batch * self.input_length, self.site_num, self.hidden_units])
-            day = tf.reshape(day, shape=[self.batch * self.input_length, self.site_num, self.hidden_units])
-            hour = tf.reshape(hour, shape=[self.batch * self.input_length, self.site_num, self.hidden_units])
-            minute = tf.reshape(minute, shape=[self.batch * self.input_length, self.site_num, self.hidden_units])
-            position = tf.reshape(position, shape=[self.batch * self.input_length, self.site_num, self.hidden_units])
+            self.en_emb = tf.reshape(inputs, shape=[self.batch * input_length, self.site_num, self.hidden_units])
+            day = tf.reshape(day, shape=[self.batch * input_length, self.site_num, self.hidden_units])
+            hour = tf.reshape(hour, shape=[self.batch * input_length, self.site_num, self.hidden_units])
+            minute = tf.reshape(minute, shape=[self.batch * input_length, self.site_num, self.hidden_units])
+            position = tf.reshape(position, shape=[self.batch * input_length, self.site_num, self.hidden_units])
             # trick
             self.en_emb = tf.add_n([self.en_emb, day, hour, minute])
             # self.en_emb=tf.layers.dense(tf.concat([self.en_emb,day,hour],axis=-1),units=self.hidden_units,name='add_speed_emb')

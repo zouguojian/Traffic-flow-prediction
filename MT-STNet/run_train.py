@@ -107,7 +107,7 @@ class Model(object):
                               scale=False, scope="position_embed")
             p_emd = tf.reshape(p_emd, shape=[1, self.hp.site_num, self.hp.emb_size])
             p_emd = tf.expand_dims(p_emd, axis=0)
-            self.p_emd = tf.tile(p_emd, [self.hp.batch_size, self.hp.input_length, 1, 1])
+            self.p_emd = tf.tile(p_emd, [self.hp.batch_size, self.hp.input_length+1, 1, 1])
             print('p_emd shape is : ', self.p_emd.shape)
 
         with tf.variable_scope('day'):
@@ -166,13 +166,14 @@ class Model(object):
             in_day = self.d_emd[:, :self.hp.input_length, :, :]
             in_hour = self.h_emd[:, :self.hp.input_length, :, :]
             in_mimute = self.m_emd[:, :self.hp.input_length, :, :]
+            in_position = self.p_emd[:, :self.hp.input_length, :, :]
 
             encoder=Encoder_ST(hp=self.hp, placeholders=self.placeholders, model_func=self.model_func)
             encoder_out=encoder.encoder_spatio_temporal(features=features,
                                                         day=in_day,
                                                         hour=in_hour,
                                                         minute=in_mimute,
-                                                        position=self.p_emd,
+                                                        position=in_position,
                                                         supports=self.supports)
             print('encoder output shape is : ', encoder_out.shape)
 
@@ -188,13 +189,14 @@ class Model(object):
             out_day = self.d_emd[:, self.hp.input_length:, :, :]
             out_hour = self.h_emd[:, self.hp.input_length:, :, :]
             out_minute = self.m_emd[:, self.hp.input_length:, :, :]
+            out_position = self.p_emd[:, self.hp.input_length:, :, :]
 
             decoder = Decoder_ST(hp=self.hp, placeholders=self.placeholders, model_func=self.model_func)
             self.pre=decoder.decoder_spatio_temporal(features=encoder_out,
                                                      day=out_day,
                                                      hour=out_hour,
                                                      minute=out_minute,
-                                                     position=self.p_emd,
+                                                     position=out_position,
                                                      supports=self.supports)
             print('pres shape is : ', self.pre.shape)
 
