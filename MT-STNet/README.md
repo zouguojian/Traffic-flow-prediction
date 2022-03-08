@@ -32,8 +32,8 @@ R<sup>2</sup> is: 0.949472
 
 #### 4-blocks and 8 heads  
 > embedding size is 512  
->MAE is : 5.977749
-RMSE is : 9.063117
-R is: 0.974713
-R<sup>2</sup> is: 0.949162
+>MAE is : 5.977749  
+RMSE is : 9.063117  
+R is: 0.974713  
+R<sup>2</sup> is: 0.949162  
  

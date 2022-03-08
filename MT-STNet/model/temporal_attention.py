@@ -1,5 +1,6 @@
 # -- coding: utf-8 --
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 
 def normalize(inputs,
               epsilon=1e-8,
@@ -36,7 +37,9 @@ def multihead_attention(queries,
                         num_units=None,
                         num_heads=8,
                         scope="multihead_attention",
-                        reuse=tf.AUTO_REUSE):
+                        reuse=tf.AUTO_REUSE,
+                        dropout_rate=0,
+                        is_training=False):
     '''Applies multihead attention.
 
     Args:
@@ -79,7 +82,7 @@ def multihead_attention(queries,
         outputs = tf.nn.softmax(outputs)  # (h*N, T_q, T_k)
 
         # Dropouts
-        # outputs = tf.layers.dropout(outputs, rate=dropout_rate, training=tf.convert_to_tensor(is_training))
+        outputs = tf.layers.dropout(outputs, rate=dropout_rate, training=tf.convert_to_tensor(is_training))
 
         # Weighted sum
         outputs = tf.matmul(outputs, V_)  # ( h*N, T_q, C/h)
@@ -167,7 +170,7 @@ def label_smoothing(inputs, epsilon=0.1):
 
 
 
-def t_attention(hiddens, hidden, hidden_units=64, num_heads=8, num_blocks = 4, dropout_rate = 0.0):
+def t_attention(hiddens, hidden, hidden_units=64, num_heads=4, num_blocks = 4, dropout_rate = 0.0, is_training=True):
     '''
     :param hiddens: [batch , input_length, site num, hidden size]
     :param hidden: [batch , 1, site num, hidden size]
@@ -186,7 +189,9 @@ def t_attention(hiddens, hidden, hidden_units=64, num_heads=8, num_blocks = 4, d
                 dec = multihead_attention(queries=dec,
                                           keys=enc,
                                           num_units=hidden_units,
-                                          num_heads=num_heads)
+                                          num_heads=num_heads,
+                                          dropout_rate=dropout_rate,
+                                          is_training=is_training)
                 ### Feed Forward
                 dec = feedforward(dec, num_units=[4 * hidden_units, hidden_units])
 

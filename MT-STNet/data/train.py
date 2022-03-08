@@ -63,7 +63,7 @@ def data_train(file_paths, out_path,encoding='utf-8'):
     # 读取所有station的values，并且按照station的映射id进行字典存储
     for path in file_paths:
         data = pd.read_csv(path, encoding=encoding)
-        data['station']=data['station'].astype(str)
+        data['station']=data['station'].astype(str) # 这一步将station中的所有内通转化为字符串形式，不然下面代码会出现整数型数值
         for station in file_path_types[path].keys():
             station_data_dict[file_path_types[path][station]]=data.loc[(data['station'] == station)].values
             rows=data.loc[data['station'] == station].shape[0]
