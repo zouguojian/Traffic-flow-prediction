@@ -14,16 +14,16 @@ class parameter(object):
         self.parser.add_argument('--step', type=int, default=1, help='step')
         self.parser.add_argument('--batch_size', type=int, default=128, help='batch size')
         self.parser.add_argument('--learning_rate', type=float, default=0.0005, help='learning rate')
-        self.parser.add_argument('--dropout', type=float, default=0.5, help='drop out')
+        self.parser.add_argument('--dropout', type=float, default=0.3, help='drop out')
         self.parser.add_argument('--site_num', type=int, default=66, help='total number of road')
-        self.parser.add_argument('--num_heads', type=int, default=8, help='total number of head attentions')
-        self.parser.add_argument('--num_blocks', type=int, default=4, help='total number of attention layers')
+        self.parser.add_argument('--num_heads', type=int, default=1, help='total number of head attentions')
+        self.parser.add_argument('--num_blocks', type=int, default=1, help='total number of attention layers')
 
         #每个点表示一个监测站点，目前66个监测站点
         self.parser.add_argument('--emb_size', type=int, default=256, help='embedding size')
         self.parser.add_argument('--features', type=int, default=1, help='numbers of the feature')
         self.parser.add_argument('--normalize', type=bool, default=True, help='normalize')
-        self.parser.add_argument('--input_length', type=int, default=6, help='input length')
+        self.parser.add_argument('--input_length', type=int, default=12, help='input length')
         self.parser.add_argument('--output_length', type=int, default=1, help='output length')
 
         self.parser.add_argument('--hidden1', type=int, default=32, help='number of units in hidden layer 1')

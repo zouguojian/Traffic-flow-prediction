@@ -11,13 +11,29 @@
 
 ## 模型实验结果
 ### LSTM
->MAE is : 6.432934  
-RMSE is : 9.824185  
-R is: 0.969684  
-R<sup>2</sup> is: 0.940265  
+> MAE is : 6.101465  
+RMSE is : 9.301329  
+R is: 0.972954  
+R<sup>2</sup> is: 0.946454  
 
 ### ST-GAT  
->MAE is : 6.343116  
-RMSE is : 9.503859  
-R is: 0.972036  
-R<sup>2</sup> is: 0.944097  
+#### 1-blocks and 1 heads for spatial, 4-blocks and 1 heads for temporal  
+>MAE is : 6.005778  
+RMSE is : 9.141615  
+R is: 0.974661  
+R<sup>2</sup> is: 0.948277  
+
+#### 1-blocks and 4 heads for spatial, 4-blocks and 4 heads for temporal 
+> embedding size is 256  
+MAE is : 5.930677  
+RMSE is : 9.035396  
+R is: 0.974623  
+R<sup>2</sup> is: 0.949472  
+
+#### 4-blocks and 8 heads  
+> embedding size is 512  
+>MAE is : 5.977749
+RMSE is : 9.063117
+R is: 0.974713
+R<sup>2</sup> is: 0.949162
+ 

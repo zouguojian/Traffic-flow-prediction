@@ -22,8 +22,17 @@ class Encoder_ST(object):
         '''
 
         x = tf.reshape(features, shape=[self.hp.batch_size, self.hp.input_length, self.hp.site_num, self.hp.emb_size])
+        # x = tf.concat([tf.expand_dims(tf.reshape(features,[-1, self.hp.emb_size]),axis=1),
+        #                tf.expand_dims(tf.reshape(day,[-1, self.hp.emb_size]),axis=1),
+        #                tf.expand_dims(tf.reshape(hour, [-1, self.hp.emb_size]), axis=1),
+        #                tf.expand_dims(tf.reshape(minute, [-1, self.hp.emb_size]), axis=1)],axis=1)
+        # x = tf.layers.conv1d(x,filters=self.hp.emb_size,kernel_size=4,strides=1,padding='valid')
+        # print('after 1d convolutional operation, the x output shape is : ',x.shape)
+        # x = tf.reshape(x, shape=[self.hp.batch_size, self.hp.input_length, self.hp.site_num, self.hp.emb_size])
+
         x = tf.reshape(tf.transpose(x, perm=[0, 2, 1, 3]),shape=[-1, self.hp.input_length, self.hp.emb_size])
-        x = t_attention(hiddens=x, hidden=x, hidden_units=self.hp.emb_size,num_heads=self.hp.num_heads,num_blocks=self.hp.num_blocks) # temporal attention
+        x = t_attention(hiddens=x, hidden=x, hidden_units=self.hp.emb_size) # temporal attention
+        # ,num_heads=self.hp.num_heads,num_blocks=self.hp.num_blocks
         x = tf.reshape(x, shape=[-1, self.hp.site_num, self.hp.input_length, self.hp.emb_size])
         x = tf.transpose(x, perm=[0, 2, 1, 3])
         features = tf.reshape(x, shape=[-1, self.hp.site_num, self.hp.emb_size])
