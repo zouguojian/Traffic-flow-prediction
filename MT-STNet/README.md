@@ -2,7 +2,7 @@
 
 ## 注意事项
 
-<font face="微软雅黑" >需要注意的是，需要根据requirements的包进行安装，才能正常的运行程序！！！</font>
+<font face="微软雅黑" >需要注意的是，需要根据requirements.txt文件中指示的包进行安装，才能正常的运行程序！！！</font>
   
 >* 首先，使用conda创建一个虚拟环境，如‘conda create traffic_flow’；  
 > * 激活环境，conda activate traffic_flow；  
@@ -13,16 +13,18 @@ tf.disable_v2_behavior()；
 ---
 
 ## 模型实验结果
-### LSTM
-> MAE is : 6.101465  
+### LSTM (1h)
+> embedding size is 64  
+especially input length: 6-1  
+MAE is : 6.101465  
 RMSE is : 9.301329  
 R is: 0.972954  
 R<sup>2</sup> is: 0.946454  
 
-### ST-GAT  
+### ST-GAT (1h)  
 #### 1-blocks and 1 heads for spatial, 4-blocks and 1 heads for temporal  
 > embedding size is 64  
-especially input length: 6-1 
+especially input length: 6-1   
 MAE is : 6.005778  
 RMSE is : 9.141615  
 R is: 0.974661  
@@ -53,8 +55,43 @@ R is: 0.974713
 R<sup>2</sup> is: 0.949162  
  
 
-### GMAN
+### GMAN (1h)  
 
 > Embedding size is 256  
 
- 
+
+### ST-GAT (6h)  
+#### 1-blocks and 1 heads for spatial, 4-blocks and 1 heads for temporal  
+> embedding size is 64  
+especially input length: 4-6   
+MAE is : 14.322435  
+RMSE is : 20.525616  
+R is: 0.927124  
+R<sup>2</sup> is: 0.739462 
+
+> especially input length: 6-6  
+epoch 100   
+MAE is : 6.372804  
+RMSE is : 9.840441  
+R is: 0.970164  
+R<sup>2</sup> is: 0.940104   
+
+> especially input length: 7-6   
+epoch 100  
+MAE is : 6.589893  
+RMSE is : 10.173542  
+R is: 0.967716  
+R<sup>2</sup> is: 0.935974  
+
+> especially input length: 8-6   
+epoch 100  
+MAE is : 6.479654  
+RMSE is : 10.042691  
+R is: 0.968415  
+R<sup>2</sup> is: 0.937646  
+
+> especially input length: 10-6  
+MAE is : 16.015195  
+RMSE is : 22.036530  
+R is: 0.920232  
+R^$2$ is: 0.699697  
