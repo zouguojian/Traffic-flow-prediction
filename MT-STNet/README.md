@@ -18,10 +18,20 @@ R<sup>2</sup> is: 0.946454
 
 ### ST-GAT  
 #### 1-blocks and 1 heads for spatial, 4-blocks and 1 heads for temporal  
->MAE is : 6.005778  
+> embedding size is 64
+especially input length: 6-1 
+MAE is : 6.005778  
 RMSE is : 9.141615  
 R is: 0.974661  
 R<sup>2</sup> is: 0.948277  
+
+#### 1-blocks and 1 heads for spatial, 4-blocks and 1 heads for temporal
+> embedding size is 64  
+especially input length: 4-1  
+MAE is : 6.097268  
+RMSE is : 9.299411  
+R is: 0.973530  
+R<sup>2</sup> is: 0.946475 
 
 #### 1-blocks and 4 heads for spatial, 4-blocks and 4 heads for temporal 
 > embedding size is 256  
@@ -36,6 +46,7 @@ R<sup>2</sup> is: 0.949472
 RMSE is : 9.063117  
 R is: 0.974713  
 R<sup>2</sup> is: 0.949162  
+ 
 
 ### GMAN
 
