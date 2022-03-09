@@ -4,9 +4,12 @@
 
 <font face="微软雅黑" >需要注意的是，需要根据requirements的包进行安装，才能正常的运行程序！！！</font>
   
->首先，使用conda创建一个虚拟环境，如‘conda create traffic_flow’；  
-激活环境，conda activate traffic_flow；  
-安装环境，需要安装的环境已经添加在requirements.txt中，可以用conda安装，也可以使用pip安装，如：conda install tensorflow==1.12.0
+>* 首先，使用conda创建一个虚拟环境，如‘conda create traffic_flow’；  
+> * 激活环境，conda activate traffic_flow；  
+> * 安装环境，需要安装的环境已经添加在requirements.txt中，可以用conda安装，也可以使用pip安装，如：conda install tensorflow==1.12.0；  
+> * 如果安装的是最新的tensorflow环境，也没问题，tensorflow的包按照以下方式进行导入即可：import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()；  
+> * 点击 run_train.py文件即可运行代码。
 ---
 
 ## 模型实验结果
@@ -18,7 +21,7 @@ R<sup>2</sup> is: 0.946454
 
 ### ST-GAT  
 #### 1-blocks and 1 heads for spatial, 4-blocks and 1 heads for temporal  
-> embedding size is 64
+> embedding size is 64  
 especially input length: 6-1 
 MAE is : 6.005778  
 RMSE is : 9.141615  
@@ -35,6 +38,7 @@ R<sup>2</sup> is: 0.946475
 
 #### 1-blocks and 4 heads for spatial, 4-blocks and 4 heads for temporal 
 > embedding size is 256  
+especially input length: 6-1  
 MAE is : 5.930677  
 RMSE is : 9.035396  
 R is: 0.974623  
@@ -42,6 +46,7 @@ R<sup>2</sup> is: 0.949472
 
 #### 4-blocks and 8 heads  
 > embedding size is 512  
+especially input length: 6-1  
 >MAE is : 5.977749  
 RMSE is : 9.063117  
 R is: 0.974713  
@@ -50,6 +55,6 @@ R<sup>2</sup> is: 0.949162
 
 ### GMAN
 
-> embedding size is 256  
+> Embedding size is 256  
 
  
