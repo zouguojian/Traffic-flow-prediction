@@ -13,7 +13,7 @@ tf.disable_v2_behavior()；
 ---
 
 ## 模型实验结果
-### LSTM (1h)
+### LSTM (1-step)
 > embedding size is 64  
 especially input length: 6-1  
 MAE is : 6.101465  
@@ -21,7 +21,7 @@ RMSE is : 9.301329
 R is: 0.972954  
 R<sup>2</sup> is: 0.946454  
 
-### ST-GAT (1h)  
+### ST-GAT (1-step)  
 #### 1-blocks and 1 heads for spatial, 4-blocks and 1 heads for temporal  
 > embedding size is 64  
 especially input length: 6-1   
@@ -55,12 +55,12 @@ R is: 0.974713
 R<sup>2</sup> is: 0.949162  
  
 
-### GMAN (1h)  
+### GMAN (1step)  
 
 > Embedding size is 256  
 
 
-### ST-GAT (6h)  
+### ST-GAT (6-steps)  
 #### 1-blocks and 1 heads for spatial, 4-blocks and 1 heads for temporal  
 > embedding size is 64  
 especially input length: 4-6   
@@ -68,6 +68,12 @@ MAE is : 14.322435
 RMSE is : 20.525616  
 R is: 0.927124  
 R<sup>2</sup> is: 0.739462 
+
+> especially input length: 5-6  
+MAE is : 6.550879  
+RMSE is : 10.132798  
+R is: 0.968368  
+R^$2$ is: 0.936499  
 
 > especially input length: 6-6  
 epoch 100   
@@ -78,10 +84,10 @@ R<sup>2</sup> is: 0.940104
 
 > especially input length: 7-6   
 epoch 100  
-MAE is : 6.589893  
-RMSE is : 10.173542  
-R is: 0.967716  
-R<sup>2</sup> is: 0.935974  
+MAE is : 6.439330  
+RMSE is : 9.963966  
+R is: 0.969012  
+R<sup>2</sup> is: 0.938585 
 
 > especially input length: 8-6   
 epoch 100  
@@ -90,8 +96,15 @@ RMSE is : 10.042691
 R is: 0.968415  
 R<sup>2</sup> is: 0.937646  
 
+> especially input length: 9-6   
+epoch 100  
+MAE is : 6.501210  
+RMSE is : 10.095425  
+R is: 0.968201  
+R<sup>2</sup> is: 0.936981  
+
 > especially input length: 10-6  
-MAE is : 16.015195  
-RMSE is : 22.036530  
-R is: 0.920232  
-R^$2$ is: 0.699697  
+MAE is : 8.980754  
+RMSE is : 13.065266  
+R is: 0.950789  
+R<sup>2</sup> is: 0.894437  

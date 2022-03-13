@@ -200,8 +200,8 @@ class Model(object):
                                                      supports=self.supports)
             print('pres shape is : ', self.pre.shape)
 
-            self.loss = tf.reduce_mean(
-                tf.sqrt(tf.reduce_mean(tf.square(self.pre + 1e-10 - self.placeholders['labels']), axis=0)))
+        self.loss = tf.reduce_mean(
+            tf.sqrt(tf.reduce_mean(tf.square(self.pre + 1e-10 - self.placeholders['labels']), axis=0)))
         self.train_op = tf.train.AdamOptimizer(self.hp.learning_rate).minimize(self.loss)
 
     def test(self):
@@ -285,7 +285,7 @@ class Model(object):
         if not self.hp.is_training:
             print('the model weights has been loaded:')
             self.saver.restore(self.sess, model_file)
-            self.saver.save(self.sess, save_path='gcn/model/' + 'model.ckpt')
+            # self.saver.save(self.sess, save_path='gcn/model/' + 'model.ckpt')
 
         iterate_test = data_load.DataClass(hp=self.hp)
         test_next = iterate_test.next_batch(batch_size=self.hp.batch_size, epoch=1, is_training=False)
