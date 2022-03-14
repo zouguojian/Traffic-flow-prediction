@@ -4,7 +4,6 @@
     <list default="true" id="49d74bf7-ad4c-4dc6-a7da-92314fbed6a4" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_train.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -40,13 +39,13 @@
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="md" value="1078" />
+          <entry key="md" value="1148" />
           <entry key="py" value="9113" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="Markdown" value="1078" />
+          <entry key="Markdown" value="1148" />
           <entry key="Python" value="9113" />
         </counts>
       </usages-collector>
@@ -130,8 +129,8 @@
         <entry file="file://$PROJECT_DIR$/README.md">
           <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
             <state split_layout="SPLIT">
-              <first_editor relative-caret-position="1515">
-                <caret line="101" column="21" lean-forward="true" selection-start-line="101" selection-start-column="21" selection-end-line="101" selection-end-column="21" />
+              <first_editor relative-caret-position="132">
+                <caret line="18" column="2" selection-start-line="18" selection-start-column="2" selection-end-line="18" selection-end-column="2" />
               </first_editor>
               <second_editor />
             </state>
@@ -181,15 +180,15 @@
         <option value="$PROJECT_DIR$/model/temporal_attention.py" />
         <option value="$PROJECT_DIR$/model/hyparameter.py" />
         <option value="$PROJECT_DIR$/model/decoder.py" />
-        <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/model/encoder.py" />
         <option value="$PROJECT_DIR$/run_train.py" />
+        <option value="$PROJECT_DIR$/README.md" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="31" />
-    <option name="y" value="75" />
+    <option name="x" value="-41" />
+    <option name="y" value="167" />
     <option name="width" value="1362" />
     <option name="height" value="796" />
   </component>
@@ -370,7 +369,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="31" y="75" width="1362" height="796" extended-state="0" />
+    <frame x="-41" y="167" width="1362" height="796" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.22520506" />
@@ -547,8 +546,8 @@
     <entry file="file://$PROJECT_DIR$/README.md">
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
         <state split_layout="SPLIT">
-          <first_editor relative-caret-position="1515">
-            <caret line="101" column="21" lean-forward="true" selection-start-line="101" selection-start-column="21" selection-end-line="101" selection-end-column="21" />
+          <first_editor relative-caret-position="132">
+            <caret line="18" column="2" selection-start-line="18" selection-start-column="2" selection-end-line="18" selection-end-column="2" />
           </first_editor>
           <second_editor />
         </state>
