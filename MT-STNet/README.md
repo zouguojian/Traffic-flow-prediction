@@ -13,23 +13,16 @@ tf.disable_v2_behavior()；
 ---
 
 ## 模型实验结果
-### LSTM (1-step)
+### LSTM (1-steps)
 
-|  评价指标   | 6-1 step  |6-3 step  |6-6 step  |
+|  评价指标   | 6-1 steps  |6-3 steps  |6-6 steps  |
 |  ----  | ----  |  ----  |  ----  |
 | MAE  | 6.101470 | 6.435726 |  6.985751|
 | RMSE  | 9.306101 | 9.930227 | 11.021970|
 | R  | 0.972961 | 0.969166 |0.961918|
-| R<sup>2</sup>  | 0.946399 | 0.938987 | 0.924858|
+| R<sup>2</sup>  | 0.946399 | 0.938987 | 0.924858| 
 
-> embedding size is 64  
-especially input length: 6-1  
-MAE is : 6.101465  
-RMSE is : 9.301329  
-R is: 0.972954  
-R<sup>2</sup> is: 0.946454  
-
-### ST-GAT (1-step)  
+### ST-GAT (1-steps)  
 #### 1-blocks and 1 heads for spatial, 4-blocks and 1 heads for temporal  
 > embedding size is 64  
 especially input length: 6-1   
@@ -69,55 +62,19 @@ R<sup>2</sup> is: 0.949162
 
 
 ### ST-GAT (6-steps)  
-#### 1-blocks and 1 heads for spatial, 4-blocks and 1 heads for temporal  
-> embedding size is 64  
-especially input length: 4-6   
-MAE is : 14.322435  
-RMSE is : 20.525616  
-R is: 0.927124  
-R<sup>2</sup> is: 0.739462 
+#### 1-blocks and 1 heads for spatial, 4-blocks and 1 heads for temporal
 
-> especially input length: 5-6  
-MAE is : 6.550879  
-RMSE is : 10.132798  
-R is: 0.968368  
-R^$2$ is: 0.936499  
-
-> especially input length: 6-6  
-epoch 100   
-MAE is : 6.372804  
-RMSE is : 9.840441  
-R is: 0.970164  
-R<sup>2</sup> is: 0.940104   
-
-> especially input length: 7-6   
-epoch 100  
-MAE is : 6.439330  
-RMSE is : 9.963966  
-R is: 0.969012  
-R<sup>2</sup> is: 0.938585 
-
-> especially input length: 8-6   
-epoch 100  
-MAE is : 6.479654  
-RMSE is : 10.042691  
-R is: 0.968415  
-R<sup>2</sup> is: 0.937646  
-
-> especially input length: 9-6   
-epoch 100  
-MAE is : 6.501210  
-RMSE is : 10.095425  
-R is: 0.968201  
-R<sup>2</sup> is: 0.936981  
+|评价指标         |4-6 steps|5-6 steps|6-6 steps|7-6 steps|8-6 steps|9-6 steps|
+|  ----          | ----    |  ----   |  ----   |----     |----     |----     |
+|epoch           |50       |50       |100      |100      |100      |100      |
+|embedding       |64       |64       |64       | 64      |64       |64       |
+| MAE            |14.322435|6.550879 |6.372804 |6.439330 |6.479654 |6.501210 |
+| RMSE           |20.525616|10.132798|9.840441 |9.963966 |10.042691|10.095425|
+| R              |0.927124 |0.968368 |0.970164 |0.969012 |0.968415 |0.968201 |
+| R<sup>2</sup>  |0.739462 |0.936499 |0.940104 |0.938585 |0.937646 |0.936981 | 
 
 > especially input length: 10-6  
 MAE is : 8.980754  
 RMSE is : 13.065266  
 R is: 0.950789  
 R<sup>2</sup> is: 0.894437  
-
-|  表头   | 表头  |
-|  ----  | ----  |
-| 单元格  | 单元格 |
-| 单元格  | 单元格 |
