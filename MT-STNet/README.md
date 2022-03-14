@@ -24,29 +24,6 @@ tf.disable_v2_behavior()；
 
 ### ST-GAT (1-steps)  
 #### 1-blocks and 1 heads for spatial, 4-blocks and 1 heads for temporal  
-> embedding size is 64  
-especially input length: 6-1   
-MAE is : 6.005778  
-RMSE is : 9.141615  
-R is: 0.974661  
-R<sup>2</sup> is: 0.948277  
-
-#### 1-blocks and 1 heads for spatial, 4-blocks and 1 heads for temporal
-> embedding size is 64  
-especially input length: 4-1  
-MAE is : 6.097268  
-RMSE is : 9.299411  
-R is: 0.973530  
-R<sup>2</sup> is: 0.946475 
-
-#### 1-blocks and 4 heads for spatial, 4-blocks and 4 heads for temporal 
-> embedding size is 256  
-especially input length: 6-1  
-MAE is : 5.930677  
-RMSE is : 9.035396  
-R is: 0.974623  
-R<sup>2</sup> is: 0.949472  
-
 #### 4-blocks and 8 heads  
 > embedding size is 512  
 especially input length: 6-1  
@@ -73,8 +50,13 @@ R<sup>2</sup> is: 0.949162
 | R              |0.927124 |0.968368 |0.970164 |0.969012 |0.968415 |0.968201 |
 | R<sup>2</sup>  |0.739462 |0.936499 |0.940104 |0.938585 |0.937646 |0.936981 | 
 
-> especially input length: 10-6  
-MAE is : 8.980754  
-RMSE is : 13.065266  
-R is: 0.950789  
-R<sup>2</sup> is: 0.894437  
+#### 1-blocks and 4 heads for spatial, 4-blocks and 4 heads for temporal
+
+|评价指标         |6-1 steps|6-2 steps|6-3 steps|6-4 steps|6-5 steps|6-6 steps|
+|  ----          | ----    |  ----   |  ----   |----     |----     |----     |
+|epoch           |100      |100      |100      |100      |100      |100      |
+|embedding       |256      |256      |256      | 256     |256      |256      |
+| MAE            |5.978483 |6.001878 |6.020515 |6.052269 |6.078716 |6.109353 |
+| RMSE           |9.140041 |9.200141 |9.238063 |9.306909 |9.361968 |9.416938 |
+| R              |0.974360 |0.974010 |0.973781 |0.973348 |0.973017 |0.972683 |
+| R<sup>2</sup>  |0.948295 |0.947623 |0.947196 |0.946412 |0.945793 |0.945149 | 
