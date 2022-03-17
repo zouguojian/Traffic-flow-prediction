@@ -21,7 +21,8 @@ from model.hyparameter import parameter
 from model.embedding import embedding
 from model.encoder import Encoder_ST
 from model.decoder import Decoder_ST
-from baseline.lstm import LstmClass
+from baseline.lstm.lstm import LstmClass
+
 
 import pandas as pd
 import tensorflow as tf

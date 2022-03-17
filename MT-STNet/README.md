@@ -15,28 +15,27 @@ tf.disable_v2_behavior()；
 ## 模型实验结果
 ### LSTM (1-steps)
 
-|  评价指标   | 6-1 steps  |6-3 steps  |6-6 steps  |
-|  ----  | ----  |  ----  |  ----  |
-| MAE  | 6.101470 | 6.435726 |  6.985751|
-| RMSE  | 9.306101 | 9.930227 | 11.021970|
-| R  | 0.972961 | 0.969166 |0.961918|
-| R<sup>2</sup>  | 0.946399 | 0.938987 | 0.924858| 
-
-### ST-GAT (1-steps)  
-#### 1-blocks and 1 heads for spatial, 4-blocks and 1 heads for temporal  
-#### 4-blocks and 8 heads  
-> embedding size is 512  
-especially input length: 6-1  
->MAE is : 5.977749  
-RMSE is : 9.063117  
-R is: 0.974713  
-R<sup>2</sup> is: 0.949162  
+|  评价指标     | 6-1 steps|6-3 steps |6-6 steps |
+|  ----        | ----     |  ----    |  ----    |
+| MAE          | 6.101470 | 6.435726 | 6.985751 |
+| RMSE         | 9.306101 | 9.930227 | 11.021970|
+| R            | 0.972961 | 0.969166 | 0.961918 |
+| R<sup>2</sup>| 0.946399 | 0.938987 | 0.924858 | 
  
-
 ### GMAN (1step)  
 
 > Embedding size is 256  
 
+MAE is : 6.119343
+RMSE is : 9.470411
+R is: 0.972230
+R^$2$ is: 0.94452
+
+没加gcn
+MAE is : 6.133067
+RMSE is : 9.510901
+R is: 0.971789
+R^$2$ is: 0.944049
 
 ### ST-GAT (6-steps)  
 #### 1-blocks and 1 heads for spatial, 4-blocks and 1 heads for temporal
@@ -50,7 +49,7 @@ R<sup>2</sup> is: 0.949162
 | R              |0.927124 |0.968368 |0.970164 |0.969012 |0.968415 |0.968201 |
 | R<sup>2</sup>  |0.739462 |0.936499 |0.940104 |0.938585 |0.937646 |0.936981 | 
 
-#### 1-blocks and 4 heads for spatial, 4-blocks and 4 heads for temporal
+#### 1-blocks and 4 heads for spatial, 1-blocks and 4 heads for temporal
 
 |评价指标         |6-1 steps|6-2 steps|6-3 steps|6-4 steps|6-5 steps|6-6 steps|
 |  ----          | ----    |  ----   |  ----   |----     |----     |----     |

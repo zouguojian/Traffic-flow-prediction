@@ -44,7 +44,7 @@ class Model(object):
         return outputs
 
 class GCN(Model):
-    def __init__(self, placeholders, input_dim, para, supports=None):
+    def __init__(self, placeholders=None, input_dim=None, para=None, supports=None):
         '''
         :param placeholders:
         :param input_dim:
@@ -65,7 +65,7 @@ class GCN(Model):
     def _build(self):
 
         self.layers.append(GraphConvolution(input_dim=self.input_dim,
-                                            output_dim=self.para.hidden1,
+                                            output_dim=self.input_dim,
                                             placeholders=self.placeholders,
                                             supports=self.supports,
                                             act=tf.nn.relu,
@@ -74,8 +74,18 @@ class GCN(Model):
                                             sparse_inputs=False,
                                             res_name='layer1'))
 
-        self.layers.append(GraphConvolution(input_dim=self.para.hidden1,
-                                            output_dim=self.para.hidden1,
+        self.layers.append(GraphConvolution(input_dim=self.input_dim,
+                                            output_dim=self.input_dim,
+                                            placeholders=self.placeholders,
+                                            supports=self.supports,
+                                            act=tf.nn.relu,
+                                            bias=True,
+                                            dropout=True,
+                                            sparse_inputs=False,
+                                            res_name='layer2'))
+
+        self.layers.append(GraphConvolution(input_dim=self.input_dim,
+                                            output_dim=self.input_dim,
                                             placeholders=self.placeholders,
                                             supports=self.supports,
                                             act=tf.nn.relu,
@@ -84,20 +94,10 @@ class GCN(Model):
                                             sparse_inputs=False,
                                             res_name='layer3'))
 
-        self.layers.append(GraphConvolution(input_dim=self.para.hidden1,
-                                            output_dim=self.para.hidden1,
-                                            placeholders=self.placeholders,
-                                            supports=self.supports,
-                                            act=tf.nn.relu,
-                                            bias=True,
-                                            dropout=True,
-                                            sparse_inputs=False,
-                                            res_name='layer4'))
-
-        self.layers.append(GraphConvolution(input_dim=self.para.hidden1,
-                                            output_dim=self.output_dim,
+        self.layers.append(GraphConvolution(input_dim=self.input_dim,
+                                            output_dim=self.input_dim,
                                             placeholders=self.placeholders,
                                             supports=self.supports,
                                             act=lambda x: x,
                                             dropout=False,
-                                            res_name='layer2'))
+                                            res_name='layer4'))

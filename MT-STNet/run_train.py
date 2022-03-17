@@ -107,7 +107,7 @@ class Model(object):
                               scale=False, scope="position_embed")
             p_emd = tf.reshape(p_emd, shape=[1, self.hp.site_num, self.hp.emb_size])
             p_emd = tf.expand_dims(p_emd, axis=0)
-            self.p_emd = tf.tile(p_emd, [self.hp.batch_size, self.hp.input_length+1, 1, 1])
+            self.p_emd = tf.tile(p_emd, [self.hp.batch_size, self.hp.input_length+self.hp.output_length, 1, 1])
             print('p_emd shape is : ', self.p_emd.shape)
 
         with tf.variable_scope('day'):
