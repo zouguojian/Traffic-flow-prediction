@@ -20,6 +20,7 @@ from model.models import GCN
 from model.hyparameter import parameter
 from model.embedding import embedding
 from baseline.lstm.lstm import LstmClass
+from baseline
 
 
 import pandas as pd

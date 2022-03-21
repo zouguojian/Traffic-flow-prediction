@@ -43,7 +43,7 @@ class BilstmClass(object):
         '''
 
         self.e_lstm_1 = self.lstm()
-        self.e_bilstm_2 = self.bilstm()
+        self.ef_bilstm_2, self.eb_bilstm_2 = self.bilstm()
         self.e_lstm_3 = self.lstm()
 
     def decoder(self):
@@ -51,7 +51,7 @@ class BilstmClass(object):
         :return:
         '''
         self.d_lstm_1 = self.lstm()
-        self.d_bilstm_2 = self.bilstm()
+        self.df_bilstm_2, self.db_bilstm_2 = self.bilstm()
         self.d_lstm_3 = self.lstm()
 
     def encoding(self, inputs):
@@ -60,11 +60,15 @@ class BilstmClass(object):
         :return: shape is [batch size, time size, hidden size]
         '''
         with tf.variable_scope('encoder_lstm'):
-            
-            outputs, _ = tf.nn.bidirectional_dynamic_rnn(self.ef_mlstm, self.eb_mlstm, inputs, dtype=tf.float32)
-            # [2, batch_size, seq_length, output_size]
-            outputs = tf.concat(outputs, axis=2)
-        return outputs
+            lstm_1_outpus, _ = tf.nn.dynamic_rnn(cell=self.e_lstm_1, inputs=inputs, dtype=tf.float32)
+            x = lstm_1_outpus
+            bilstm_2_outpus, _ = tf.nn.bidirectional_dynamic_rnn(self.ef_bilstm_2, self.eb_bilstm_2, x, dtype=tf.float32)
+            # shape is [2, batch_size, seq_length, output_size]
+            x = tf.concat(bilstm_2_outpus, axis=2)
+            x = tf.layers.dense(inputs=x, units=self.hidden_size,activation=None,name='encoder_full')
+            lstm_3_outpus,_ = tf.nn.dynamic_rnn(cell=self.e_lstm_3, inputs=x, dtype=tf.float32)
+            x = lstm_3_outpus
+        return x
 
     def decoding(self,  encoder_hs, site_num):
         '''
@@ -72,21 +76,19 @@ class BilstmClass(object):
         :return:  shape is [batch size, prediction size]
         '''
         pres = []
-        h_state = encoder_hs[:, -1, :]
-        initial_state=self.d_initial_state
-
-        h_state = tf.layers.dense(h_state, units=self.hidden_size)
-
-        for i in range(self.output_length):
-            h_state = tf.expand_dims(input=h_state, axis=1)
-            with tf.variable_scope('decoder_lstm'):
-                h_state, state = tf.nn.dynamic_rnn(cell=self.d_mlstm, inputs=h_state, dtype=tf.float32)
-            h_state=tf.reshape(h_state,shape=[-1,self.hidden_size])
-
-            results = tf.layers.dense(inputs=h_state, units=1, name='layer', reuse=tf.AUTO_REUSE)
-            pre=tf.reshape(results,shape=[-1,site_num])
-            # to store the prediction results for road nodes on each time
-            pres.append(tf.expand_dims(pre, axis=-1))
+        h_state = encoder_hs[:, -1:, :]
+        with tf.variable_scope('decoder_lstm'):
+            for i in range(self.output_length):
+                lstm_1_outpus, _ = tf.nn.dynamic_rnn(cell=self.d_lstm_1, inputs=h_state, dtype=tf.float32)
+                x = lstm_1_outpus
+                bilstm_2_outpus, _ = tf.nn.bidirectional_dynamic_rnn(self.ef_bilstm_2, self.eb_bilstm_2, x, dtype=tf.float32)
+                # shape is [2, batch_size, seq_length, output_size]
+                x = tf.concat(bilstm_2_outpus, axis=2)
+                lstm_3_outpus,_ = tf.nn.dynamic_rnn(cell=self.e_lstm_3, inputs=x, dtype=tf.float32)
+                h_state = lstm_3_outpus
+                results = tf.layers.dense(inputs=tf.squeeze(h_state), units=1, name='layer', reuse=tf.AUTO_REUSE)
+                pre = tf.reshape(results, shape=[-1, site_num])
+                pres.append(tf.expand_dims(pre, axis=-1))
 
         return tf.concat(pres, axis=-1,name='output_y')
 
