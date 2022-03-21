@@ -26,7 +26,7 @@ dragon_stations=['G008564001000310010', 'G008564001000320010',
                  'G008564001000410010', 'G008564001000420010',
                  'G002064001000520010', 'G002064001000510010']
 
-keys=['gantry_id', 'tian', 'xiaoshi', 'fenzhong', 'cheliuliang'] # keys
+keys=['gantry_id', 'tian', 'day','xiaoshi', 'fenzhong', 'cheliuliang'] # keys
 months=[-1,31,29,31,30,31,30,31,31,30,31,30,31] # -1 represents a sentinel
 hours=24    # 24 h
 minutes=60  # 60 minutes
@@ -62,15 +62,15 @@ def read_source(file_paths, beg_month=6,end_month=9,year=2021,encoding='utf-8'):
             # to traverse the input months list
             for day in range(1, months[month]+1):
                 # to traverse the input days of each month
-                current_date=str(year)+'-'+(str(month) if month>9 else '0'+str(month)) +'-'+(str(day) if day>9 else '0'+str(day))
+                current_date=str(year)+'/'+str(month) +'/'+str(day)
                 for hour in range(hours):
                     for minute in range(0, minutes, 5):
                         sum_flow=0
                         for data in dragon_station_data_list: # read data form the DataFrom list
                             if not data.loc[(data['tian'] == current_date) & (data['xiaoshi'] == hour) & (data['fenzhong'] == minute)].empty:
                                 sum_flow+=int(data.loc[(data['tian'] == current_date) & (data['xiaoshi'] == hour) & (data['fenzhong'] == minute)].values[-1][-1])
-                        print(dragon_station, current_date,hour,minute,sum_flow)
-                        yield dragon_station, current_date.replace('-','/'),hour,minute,sum_flow
+                        print(dragon_station, current_date,day, hour,minute,sum_flow)
+                        yield dragon_station, current_date,day, hour,minute,sum_flow
 
 def data_combine(file_paths, out_path, beg_month=6,end_month=9,year=2021,encoding='utf-8'):
     '''
@@ -93,7 +93,7 @@ if __name__=='__main__':
     #     print(line)
 
     # data1=pd.read_csv('dragon_flow.csv',encoding='utf-8')
-    data = pd.read_csv('dragon_flow_fill_new.csv', encoding='utf-8').values
+    data = pd.read_csv('dragon_flow.csv', encoding='utf-8')
 
 
     # file = open('dragon_flow_fill_new.csv', 'w', encoding='utf-8')
@@ -115,7 +115,7 @@ if __name__=='__main__':
 
     # zero_index=0
     # start_date='2021/6/1'
-    # for line in data1.values:
+    # for line in data.values:
     #     if line[-1]==0:
     #         zero_index+=1
     #         if zero_index==1:
@@ -126,7 +126,7 @@ if __name__=='__main__':
     #             zero_index=0
     #         else:
     #             zero_index=0
-    #             start_date=line[1]
+    #         start_date=line[1]
 
 
     print('finished')

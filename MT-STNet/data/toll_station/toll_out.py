@@ -6,7 +6,7 @@ import os
 import datetime
 
 out_toll_stations=[2002,2005,2007,2008,2009,2011,2012,101001,101007,102004,102005,106006,106007]
-keys=['出口站点', '日期', '小时', '分钟', '车流量'] # keys
+keys=['exit_station','tian','xiaoshi','fenzhong','cheliuliang'] # keys
 months=[-1,31,29,31,30,31,30,31,31,30,31,30,31] # -1 represents a sentinel
 hours=24    # 24 h
 minutes=60  # 60 minutes
@@ -33,7 +33,7 @@ def read_source(file_paths, beg_month=6,end_month=9,year=2021,encoding='utf-8'):
         for out_file_path in file_paths:
             out_toll_station_data=pd.read_csv(filepath_or_buffer=out_file_path,encoding=encoding)
             # read each station data
-            out_toll_station_data_list.append(out_toll_station_data.loc[(out_toll_station_data['出口站点'] == out_toll_station)])
+            out_toll_station_data_list.append(out_toll_station_data.loc[(out_toll_station_data['exit_station'] == out_toll_station)])
             # use list to store each station data
 
         for month in range(beg_month,end_month):
@@ -45,10 +45,10 @@ def read_source(file_paths, beg_month=6,end_month=9,year=2021,encoding='utf-8'):
                     for minute in range(0, minutes, 5):
                         sum_flow=0
                         for data in out_toll_station_data_list: # read data form the DataFrom list
-                            if not data.loc[(data['日期'] == current_date) & (data['小时'] == hour) & (data['分钟'] == minute)].empty:
-                                sum_flow+=int(data.loc[(data['日期'] == current_date) & (data['小时'] == hour) & (data['分钟'] == minute)].values[-1][-1])
-                        print(out_toll_station, current_date,hour,minute,sum_flow)
-                        yield out_toll_station, current_date,hour,minute,sum_flow
+                            if not data.loc[(data['tian'] == current_date) & (data['xiaoshi'] == hour) & (data['fenzhong'] == minute)].empty:
+                                sum_flow+=int(data.loc[(data['tian'] == current_date) & (data['xiaoshi'] == hour) & (data['fenzhong'] == minute)].values[-1][-1])
+                        print(out_toll_station, current_date,day,hour,minute,sum_flow)
+                        yield out_toll_station, current_date,day,hour,minute,sum_flow
 
 def data_combine(file_paths, out_path, beg_month=6,end_month=9,year=2021,encoding='utf-8'):
     '''
@@ -62,7 +62,7 @@ def data_combine(file_paths, out_path, beg_month=6,end_month=9,year=2021,encodin
     '''
     file = open(out_path, 'w', encoding='utf-8')
     writer = csv.writer(file)
-    writer.writerow(['station','date','hour','minute','flow'])
+    writer.writerow(['station','date','day','hour','minute','flow'])
     for line in read_source(file_paths=file_paths, beg_month=beg_month,end_month=end_month, year=year, encoding=encoding):
         writer.writerow(line)
     file.close()

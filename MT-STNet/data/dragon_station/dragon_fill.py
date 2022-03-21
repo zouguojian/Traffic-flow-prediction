@@ -5,7 +5,6 @@ import datetime
 path = 'dragon_flow.csv'
 
 raw_data = pd.read_csv(path,encoding='utf-8')
-print('before:',raw_data)
 raw_data['date'] = pd.to_datetime(raw_data['date'], format='%Y/%m/%d')
 
 # G000664001004010010
@@ -186,6 +185,7 @@ raw_data.loc[(raw_data['station'] == "G000664001001410010") & (
             G000664001001410010_DATA['date'] >= G000664001001410010_start_empty)
              & (G000664001001410010_DATA[
                     'date'] <= G000664001001410010_end_empty), 'flow'] = G000664001001410010_DATA_RANGE.values
+
 # G000664001001420010 2021/06/01 2021/06/13
 G000664001001420010_DATA = raw_data[raw_data['station'] == "G000664001001420010"]
 G000664001001420010_time_start = datetime.datetime(2021, 7, 1)
@@ -222,7 +222,6 @@ raw_data.loc[(raw_data['station'] == "G000664001000910010") & (
                     'date'] <= G000664001000910010_end_empty), 'flow'] = G000664001000910010_DATA_RANGE.values
 
 G000664001000910010_DATA = raw_data[raw_data['station'] == "G000664001000910010"]
-
 G000664001000910010_time_start2 = datetime.datetime(2021, 7, 1)
 G000664001000910010_time_end2 = datetime.datetime(2021, 7, 30)
 # 缺的
@@ -236,6 +235,7 @@ raw_data.loc[(raw_data['station'] == "G000664001000910010") & (
             G000664001000910010_DATA['date'] >= G000664001000910010_start_empty2)
              & (G000664001000910010_DATA[
                     'date'] <= G000664001000910010_end_empty2), 'flow'] = G000664001000910010_DATA_RANGE2.values
+
 # G000664001000920010 2021/06/01 2021/07/21
 G000664001000920010_DATA = raw_data[raw_data['station'] == "G000664001000920010"]
 G000664001000920010_time_start = datetime.datetime(2021, 8, 1)
@@ -272,5 +272,17 @@ raw_data.loc[(raw_data['station'] == "G000664001000920010") & (
 #             G000664001000920010_DATA['date'] >= G000664001000920010_start_empty2)
 #              & (G000664001000920010_DATA[
 #                     'date'] <= G000664001000920010_end_empty2), 'flow'])
+raw_data['date'] = raw_data['date'].astype(str)
 print('after:',raw_data)
-raw_data.to_csv('dragon_flow_fill.csv')
+# raw_data.to_csv('dragon_flow_fill.csv', index=None)
+import csv
+file = open('dragon_flow_fill.csv', 'w', encoding='utf-8')
+writer = csv.writer(file)
+writer.writerow(['station', 'date', 'day', 'hour', 'minute', 'flow'])
+
+for line in raw_data.values:
+    date = datetime.datetime.strptime(line[1],"%Y-%m-%d")
+    line[1]=str(date.year)+'/'+str(date.month)+'/'+str(date.day)
+    writer.writerow(line)
+
+file.close()

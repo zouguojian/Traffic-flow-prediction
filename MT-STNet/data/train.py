@@ -34,7 +34,7 @@ dragon_stations={'G008564001000310010':26, 'G008564001000320010':27,
 
 file_path_types={'toll_station/in_flow.csv':in_toll_stations,
                  'toll_station/out_flow.csv':out_toll_stations,
-                 'dragon_station/dragon_flow.csv':dragon_stations}
+                 'dragon_station/dragon_flow_fill.csv':dragon_stations}
 
 keys=['station','date','hour','minute','flow'] # keys
 months=[-1,31,29,31,30,31,30,31,31,30,31,30,31] # -1 represents a sentinel
@@ -64,6 +64,7 @@ def data_train(file_paths, out_path,encoding='utf-8'):
     for path in file_paths:
         data = pd.read_csv(path, encoding=encoding)
         data['station']=data['station'].astype(str) # 这一步将station中的所有内通转化为字符串形式，不然下面代码会出现整数型数值
+        data['date'] = data['date'].astype(str)
         for station in file_path_types[path].keys():
             station_data_dict[file_path_types[path][station]]=data.loc[(data['station'] == station)].values
             rows=data.loc[data['station'] == station].shape[0]
@@ -73,14 +74,13 @@ def data_train(file_paths, out_path,encoding='utf-8'):
     for i in range(rows):
         print('the line index is : ', i)
         for station_index in station_data_dict.keys():
-            writer.writerow([str(station_index)]+[station_data_dict[station_index][i][1]]+
-                            [int(station_data_dict[station_index][i][1].split('/')[-1])]+list(station_data_dict[station_index][i])[2:])
+            writer.writerow([str(station_index)]+list(station_data_dict[station_index][i])[1:])
     file.close()
 
 if __name__=='__main__':
     print('hello')
-    data_train(file_paths=['toll_station/in_flow.csv', 'toll_station/out_flow.csv', 'dragon_station/dragon_flow.csv'], out_path='train.csv', encoding='utf-8')
+    # data_train(file_paths=['toll_station/in_flow.csv', 'toll_station/out_flow.csv', 'dragon_station/dragon_flow_fill.csv'], out_path='train.csv', encoding='utf-8')
 
-    print(pd.read_csv('train.csv',encoding='utf-8').shape)
+    print(pd.read_csv('train.csv',encoding='utf-8').values[:66])
 
     print('finished')

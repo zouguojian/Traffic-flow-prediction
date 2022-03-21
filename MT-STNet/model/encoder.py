@@ -24,6 +24,14 @@ class Encoder_ST(object):
         atten_output = tf.reduce_sum(tf.multiply(inputs, alpha), axis=1)
         return atten_output
 
+    def gate_fusion(self,states=None,inputs=None,hidden_size=256):
+        x=tf.concat([states,inputs],axis=-1)
+        f = tf.layers.dense(x,units=hidden_size,activation=tf.nn.sigmoid,kernel_initializer=tf.truncated_normal_initializer(dtype=tf.float32),name='forget')
+        i = tf.layers.dense(x,units=hidden_size,activation=tf.nn.sigmoid,kernel_initializer=tf.truncated_normal_initializer(dtype=tf.float32),name='inputs')
+        c_t = tf.layers.dense(x,units=hidden_size,activation=tf.nn.tanh,kernel_initializer=tf.truncated_normal_initializer(dtype=tf.float32),name='c_state')
+        c= tf.multiply(f,states)+tf.multiply(i,c_t)
+        return c
+
     def encoder_spatio_temporal(self, features=None, day=None, hour=None, minute=None, position=None, supports=None):
         '''
         :param flow:
@@ -74,11 +82,16 @@ class Encoder_ST(object):
         # encoder_gcn_out=tf.expand_dims(encoder_gcn_out,axis=1)
         # x=tf.concat([x, encoder_gcn_out],axis=1)
         # x=self.gate_attention(inputs=x,hidden_size=self.hp.emb_size)
-
         w_1 = tf.Variable(tf.truncated_normal(shape=[self.hp.emb_size,self.hp.emb_size]), name='w_1')
         w_2 = tf.Variable(tf.truncated_normal(shape=[self.hp.emb_size,self.hp.emb_size]), name='w_2')
         bias = tf.Variable(tf.truncated_normal(shape=[self.hp.emb_size]), name='bias')
-        z = tf.nn.sigmoid(tf.add(tf.add_n([tf.matmul(x,w_1), tf.matmul(encoder_gcn_out,w_2)]),bias))
+        z = tf.nn.sigmoid(tf.add(tf.add_n([tf.layers.dense(x, self.hp.emb_size,
+                                                           kernel_initializer=tf.truncated_normal_initializer(
+                                                               dtype=tf.float32), name='w_1'),
+                                           tf.layers.dense(x, self.hp.emb_size,
+                                                           kernel_initializer=tf.truncated_normal_initializer(
+                                                               dtype=tf.float32), name='w_2')]), bias))
+        # z = tf.nn.sigmoid(tf.add(tf.add_n([tf.matmul(x,w_1), tf.matmul(encoder_gcn_out,w_2)]),bias))
         encoder_out = tf.multiply(z, x) + tf.multiply(1 - z, encoder_gcn_out)
         encoder_out = tf.reshape(encoder_out, shape=[self.hp.batch_size, self.hp.input_length, self.hp.site_num, self.hp.emb_size])
 
