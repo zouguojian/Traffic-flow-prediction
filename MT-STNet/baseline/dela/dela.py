@@ -5,13 +5,14 @@ class DelaClass(object):
     def __init__(self, hp, placeholders):
         self.hp = hp
         self.hidden_size = self.hp.hidden_size
-        self.layer_num = self.hp.layer_num
+        self.layer_num = self.hp.hidden_layer
         self.placeholders = placeholders
         self.h = 3
         self.w = 3
         self.input_length = self.hp.input_length
         self.output_length = self.hp.output_length
         self.site_num = self.hp.site_num
+        self.features = self.hp.features
 
     def attention(self, h_t, encoder_hs):
         '''
@@ -38,19 +39,26 @@ class DelaClass(object):
         x=tf.transpose(x, perm=[0, 2, 1, 3]) # [batch size,  site num, input length, features]
 
         filter1=tf.get_variable("filter1", [self.h,self.w,1,64], initializer=tf.truncated_normal_initializer(stddev=0.1))
+        bias1 = tf.get_variable("bias1", [64], initializer=tf.truncated_normal_initializer(stddev=0.1))
+        layer1=tf.layers.conv2d(inputs=x,filters=[3,3],kernel_size=64,padding='same',kernel_initializer=tf.truncated_normal_initializer())
         layer1=tf.nn.conv2d(input=x,filter=filter1,strides=[1,1,1,1],padding='SAME')
         # bn1=tf.layers.batch_normalization(layer1,training=self.placeholders['is_training'])
-        relu1=tf.nn.relu(layer1)
+        x = tf.add(layer1, bias1)
+        relu1=tf.nn.relu(x)
 
         filter2 = tf.get_variable("filter2", [self.h,self.w,64,64], initializer=tf.truncated_normal_initializer(stddev=0.1))
+        bias2 = tf.get_variable("bias2", [64], initializer=tf.truncated_normal_initializer(stddev=0.1))
         layer2 = tf.nn.conv2d(input=relu1, filter=filter2, strides=[1, 1, 1, 1], padding='SAME')
         # bn2=tf.layers.batch_normalization(layer2,training=self.placeholders['is_training'])
-        relu2=tf.nn.relu(layer2)
+        x = tf.add(layer2, bias2)
+        relu2=tf.nn.relu(x)
 
-        filter3 = tf.get_variable("filter3", [self.h,self.w,64,128], initializer=tf.truncated_normal_initializer(stddev=0.1))
+        filter3 = tf.get_variable("filter3", [self.h,self.w,64,self.hidden_size], initializer=tf.truncated_normal_initializer(stddev=0.1))
+        bias3 = tf.get_variable("bias3", [self.hidden_size], initializer=tf.truncated_normal_initializer(stddev=0.1))
         layer3 = tf.nn.conv2d(input=relu2, filter=filter3, strides=[1, 1, 1, 1], padding='SAME')
         # bn3=tf.layers.batch_normalization(layer3,training=self.placeholders['is_training'])
-        relu3=tf.nn.relu(layer3)
+        x = tf.add(layer3, bias3)
+        relu3=tf.nn.relu(x)
 
         cnn_x = tf.reduce_sum(relu3, axis=2)
 
@@ -65,19 +73,24 @@ class DelaClass(object):
         return mlstm
 
     def encoding(self, x=None):
-        x = tf.layers.dense(inputs=x, units=self.hidden_size, name='dense_layer')
+        # x = tf.layers.dense(inputs=x, units=self.hidden_size, name='dense_layer')
         cnn_x = self.cnn(x)
 
 
         x = tf.transpose(x, [0, 2, 1, 3])
-        x = tf.reshape(x, shape=[-1, self.input_length,self.hidden_size])
+        x = tf.reshape(x, shape=[-1, self.input_length,self.features])
 
         with tf.variable_scope('encoder_lstm'):
             lstm_x, _ = tf.nn.dynamic_rnn(cell=self.lstm(), inputs=x, dtype=tf.float32)
         lstm_x = tf.reshape(lstm_x[:,-1,:],shape=[-1, self.site_num, self.hidden_size])
-        hidden_x = tf.add_n([cnn_x,lstm_x],name='add')
+        hidden_x = tf.concat([cnn_x,lstm_x],axis=-1)
         return hidden_x
 
-    def decoder(self, x=None, embeddings=None):
+    def decoding(self, x=None, embeddings=None):
+        embedding_x = tf.add_n(embeddings)
+        embedding_x = tf.reduce_sum(embedding_x,axis=1)
+        x = tf.concat([x, embedding_x],axis=-1)
 
-        return
+        x = tf.layers.dense(inputs=x, units=self.hidden_size, name='full_1')
+        pre=tf.layers.dense(inputs=x, units=self.output_length,name='output_y')
+        return pre
