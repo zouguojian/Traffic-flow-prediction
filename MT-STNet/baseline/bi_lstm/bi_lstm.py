@@ -41,7 +41,6 @@ class BilstmClass(object):
         '''
         :return:  shape is [batch size, time size, hidden size]
         '''
-
         self.e_lstm_1 = self.lstm()
         self.ef_bilstm_2, self.eb_bilstm_2 = self.bilstm()
         self.e_lstm_3 = self.lstm()
@@ -59,13 +58,15 @@ class BilstmClass(object):
         :param inputs:
         :return: shape is [batch size, time size, hidden size]
         '''
-        with tf.variable_scope('encoder_lstm'):
+        with tf.variable_scope('encoder_lstm_1'):
             lstm_1_outpus, _ = tf.nn.dynamic_rnn(cell=self.e_lstm_1, inputs=inputs, dtype=tf.float32)
             x = lstm_1_outpus
+        with tf.variable_scope('encoder_bilstm_2'):
             bilstm_2_outpus, _ = tf.nn.bidirectional_dynamic_rnn(self.ef_bilstm_2, self.eb_bilstm_2, x, dtype=tf.float32)
             # shape is [2, batch_size, seq_length, output_size]
             x = tf.concat(bilstm_2_outpus, axis=2)
-            x = tf.layers.dense(inputs=x, units=self.hidden_size,activation=None,name='encoder_full')
+            x = tf.layers.dense(inputs=x, units=self.hidden_size, activation=None,name='encoder_full')
+        with tf.variable_scope('encoder_lstm_3'):
             lstm_3_outpus,_ = tf.nn.dynamic_rnn(cell=self.e_lstm_3, inputs=x, dtype=tf.float32)
             x = lstm_3_outpus
         return x
@@ -77,18 +78,20 @@ class BilstmClass(object):
         '''
         pres = []
         h_state = encoder_hs[:, -1:, :]
-        with tf.variable_scope('decoder_lstm'):
-            for i in range(self.output_length):
+        for i in range(self.output_length):
+            with tf.variable_scope('decoder_lstm_1'):
                 lstm_1_outpus, _ = tf.nn.dynamic_rnn(cell=self.d_lstm_1, inputs=h_state, dtype=tf.float32)
                 x = lstm_1_outpus
-                bilstm_2_outpus, _ = tf.nn.bidirectional_dynamic_rnn(self.ef_bilstm_2, self.eb_bilstm_2, x, dtype=tf.float32)
+            with tf.variable_scope('decoder_bilstm_2'):
+                bilstm_2_outpus, _ = tf.nn.bidirectional_dynamic_rnn(self.df_bilstm_2, self.db_bilstm_2, x, dtype=tf.float32)
                 # shape is [2, batch_size, seq_length, output_size]
                 x = tf.concat(bilstm_2_outpus, axis=2)
-                lstm_3_outpus,_ = tf.nn.dynamic_rnn(cell=self.e_lstm_3, inputs=x, dtype=tf.float32)
-                h_state = lstm_3_outpus
-                results = tf.layers.dense(inputs=tf.squeeze(h_state), units=1, name='layer', reuse=tf.AUTO_REUSE)
-                pre = tf.reshape(results, shape=[-1, site_num])
-                pres.append(tf.expand_dims(pre, axis=-1))
+            with tf.variable_scope('decoder_lstm_3'):
+                lstm_3_outpus,_ = tf.nn.dynamic_rnn(cell=self.d_lstm_3, inputs=x, dtype=tf.float32)
+            h_state = lstm_3_outpus
+            results = tf.layers.dense(inputs=tf.squeeze(h_state), units=1, name='layer', reuse=tf.AUTO_REUSE)
+            pre = tf.reshape(results, shape=[-1, site_num])
+            pres.append(tf.expand_dims(pre, axis=-1))
 
         return tf.concat(pres, axis=-1,name='output_y')
 

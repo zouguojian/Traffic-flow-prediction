@@ -20,7 +20,7 @@ from model.models import GCN
 from model.hyparameter import parameter
 from model.embedding import embedding
 from baseline.lstm.lstm import LstmClass
-from baseline
+from baseline.bi_lstm.bi_lstm import BilstmClass
 
 
 import pandas as pd
@@ -164,13 +164,6 @@ class Model(object):
                                                                          self.hp.features])
 
             # this step use to encoding the input series data
-            '''
-            lstm, return --- for example ,output shape is :(32, 3, 162, 128)
-            axis=0: bath size
-            axis=1: input data time size
-            axis=2: numbers of the nodes
-            axis=3: output feature size
-            '''
             encoder_init = LstmClass(self.hp.batch_size * self.hp.site_num,
                                     predict_time=self.hp.output_length,
                                     layer_num=self.hp.hidden_layer,
@@ -182,6 +175,24 @@ class Model(object):
                                                self.hp.features])
             h_states= encoder_init.encoding(inputs)
 
+            # decoder
+            print('#................................in the decoder step......................................#')
+            # this step to presict the polutant concentration
+            self.pre=encoder_init.decoding(h_states, self.hp.site_num)
+            print('pres shape is : ', self.pre.shape)
+        elif self.hp.model_name=='bilstm':
+            # features=tf.layers.dense(self.placeholders['features'], units=self.para.emb_size) #[-1, site num, emb_size]
+            features = tf.reshape(self.placeholders['features'], shape=[self.hp.batch_size,
+                                                                         self.hp.input_length,
+                                                                         self.hp.site_num,
+                                                                         self.hp.features])
+            # this step use to encoding the input series data
+            encoder_init = BilstmClass(self.hp, placeholders=self.placeholders)
+            inputs = tf.transpose(features, perm=[0, 2, 1, 3])
+            inputs = tf.reshape(inputs, shape=[self.hp.batch_size * self.hp.site_num,
+                                               self.hp.input_length,
+                                               self.hp.features])
+            h_states= encoder_init.encoding(inputs)
             # decoder
             print('#................................in the decoder step......................................#')
             # this step to presict the polutant concentration
