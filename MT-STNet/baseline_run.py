@@ -21,7 +21,7 @@ from model.hyparameter import parameter
 from model.embedding import embedding
 from baseline.lstm.lstm import LstmClass
 from baseline.bi_lstm.bi_lstm import BilstmClass
-
+from baseline.dela.dela import DelaClass
 
 import pandas as pd
 import tensorflow as tf
@@ -197,6 +197,25 @@ class Model(object):
             print('#................................in the decoder step......................................#')
             # this step to presict the polutant concentration
             self.pre=encoder_init.decoding(h_states, self.hp.site_num)
+            print('pres shape is : ', self.pre.shape)
+        elif self.hp.model_name=='dela':
+            # features=tf.layers.dense(self.placeholders['features'], units=self.para.emb_size) #[-1, site num, emb_size]
+            features = tf.reshape(self.placeholders['features'], shape=[self.hp.batch_size,
+                                                                         self.hp.input_length,
+                                                                         self.hp.site_num,
+                                                                         self.hp.features])
+            in_day = self.d_emd[:, :self.hp.input_length, :, :]
+            in_hour = self.h_emd[:, :self.hp.input_length, :, :]
+            in_mimute = self.m_emd[:, :self.hp.input_length, :, :]
+            in_position = self.p_emd[:, :self.hp.input_length, :, :]
+            embeddings=[in_day, in_hour, in_mimute, in_position]
+            # this step use to encoding the input series data
+            encoder_init = DelaClass(self.hp, placeholders=self.placeholders)
+            x = encoder_init.encoding(features)
+            # decoder
+            print('#................................in the decoder step......................................#')
+            # this step to presict the polutant concentration
+            self.pre=encoder_init.decoding(x, embeddings)
             print('pres shape is : ', self.pre.shape)
 
         self.loss = tf.reduce_mean(
