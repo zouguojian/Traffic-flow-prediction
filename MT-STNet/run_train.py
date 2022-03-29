@@ -154,51 +154,51 @@ class Model(object):
         :return:
         '''
         print('#................................in the encoder step......................................#')
-        with tf.variable_scope(name_or_scope='encoder'):
-            '''
-            return, the gcn output --- for example, inputs.shape is :  (32, 3, 162, 32)
-            axis=0: bath size
-            axis=1: input data time size
-            axis=2: numbers of the nodes
-            axis=3: output feature size
-            '''
-            features=tf.layers.dense(self.placeholders['features'], units=self.hp.emb_size) # [B*L, site num, emb_size]
-            in_day = self.d_emd[:, :self.hp.input_length, :, :]
-            in_hour = self.h_emd[:, :self.hp.input_length, :, :]
-            in_mimute = self.m_emd[:, :self.hp.input_length, :, :]
-            in_position = self.p_emd[:, :self.hp.input_length, :, :]
+        # with tf.variable_scope(name_or_scope='encoder'):
+        '''
+        return, the gcn output --- for example, inputs.shape is :  (32, 3, 162, 32)
+        axis=0: bath size
+        axis=1: input data time size
+        axis=2: numbers of the nodes
+        axis=3: output feature size
+        '''
+        features=tf.layers.dense(self.placeholders['features'], units=self.hp.emb_size) # [B*L, site num, emb_size]
+        in_day = self.d_emd[:, :self.hp.input_length, :, :]
+        in_hour = self.h_emd[:, :self.hp.input_length, :, :]
+        in_mimute = self.m_emd[:, :self.hp.input_length, :, :]
+        in_position = self.p_emd[:, :self.hp.input_length, :, :]
 
-            encoder=Encoder_ST(hp=self.hp, placeholders=self.placeholders, model_func=self.model_func)
-            encoder_out=encoder.encoder_spatio_temporal(features=features,
-                                                        day=in_day,
-                                                        hour=in_hour,
-                                                        minute=in_mimute,
-                                                        position=in_position,
-                                                        supports=self.supports)
-            print('encoder output shape is : ', encoder_out.shape)
+        encoder=Encoder_ST(hp=self.hp, placeholders=self.placeholders, model_func=self.model_func)
+        encoder_out=encoder.encoder_spatio_temporal(features=features,
+                                                    day=in_day,
+                                                    hour=in_hour,
+                                                    minute=in_mimute,
+                                                    position=in_position,
+                                                    supports=self.supports)
+        print('encoder output shape is : ', encoder_out.shape)
 
         print('#................................in the decoder step......................................#')
-        with tf.variable_scope(name_or_scope='decoder'):
-            '''
-            return, the gcn output --- for example, inputs.shape is :  (32, 1, 162, 32)
-            axis=0: bath size
-            axis=1: input data time size
-            axis=2: numbers of the nodes
-            axis=3: output feature size
-            '''
-            out_day = self.d_emd[:, self.hp.input_length:, :, :]
-            out_hour = self.h_emd[:, self.hp.input_length:, :, :]
-            out_minute = self.m_emd[:, self.hp.input_length:, :, :]
-            out_position = self.p_emd[:, self.hp.input_length:, :, :]
+        # with tf.variable_scope(name_or_scope='decoder'):
+        '''
+        return, the gcn output --- for example, inputs.shape is :  (32, 1, 162, 32)
+        axis=0: bath size
+        axis=1: input data time size
+        axis=2: numbers of the nodes
+        axis=3: output feature size
+        '''
+        out_day = self.d_emd[:, self.hp.input_length:, :, :]
+        out_hour = self.h_emd[:, self.hp.input_length:, :, :]
+        out_minute = self.m_emd[:, self.hp.input_length:, :, :]
+        out_position = self.p_emd[:, self.hp.input_length:, :, :]
 
-            decoder = Decoder_ST(hp=self.hp, placeholders=self.placeholders, model_func=self.model_func)
-            self.pre=decoder.decoder_spatio_temporal_1(features=encoder_out,
-                                                     day=out_day,
-                                                     hour=out_hour,
-                                                     minute=out_minute,
-                                                     position=out_position,
-                                                     supports=self.supports)
-            print('pres shape is : ', self.pre.shape)
+        decoder = Decoder_ST(hp=self.hp, placeholders=self.placeholders, model_func=self.model_func)
+        self.pre=decoder.decoder_spatio_temporal_1(features=encoder_out,
+                                                 day=out_day,
+                                                 hour=out_hour,
+                                                 minute=out_minute,
+                                                 position=out_position,
+                                                 supports=self.supports)
+        print('pres shape is : ', self.pre.shape)
 
         self.loss = tf.reduce_mean(
             tf.sqrt(tf.reduce_mean(tf.square(self.pre + 1e-10 - self.placeholders['labels']), axis=0)))

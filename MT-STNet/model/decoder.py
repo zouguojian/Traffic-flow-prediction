@@ -103,7 +103,7 @@ class Decoder_ST(object):
 
         return tf.concat(pres, axis=-1, name='output_y')
 
-    def decoder_spatio_temporal_1(self, features=None, day=None, hour=None, minute=None, position=None, supports=None, in_length=3):
+    def decoder_spatio_temporal_1(self, features=None, day=None, hour=None, minute=None, position=None, supports=None, in_length=6):
         '''
         :param flow:
         :param day:
@@ -111,13 +111,13 @@ class Decoder_ST(object):
         :param position:
         :return:
         '''
-        pres = list()
-
         pre_features = tf.add_n([day, hour, minute])
         pre_features = tf.reshape(tf.transpose(pre_features, perm=[0, 2, 1, 3]), shape=[-1, self.hp.output_length, self.hp.emb_size])  # 3-D
         features = tf.reshape(features, shape=[self.hp.batch_size, self.hp.input_length, self.hp.site_num, self.hp.emb_size])
         features = tf.reshape(tf.transpose(features, perm=[0, 2, 1, 3]),shape=[-1, self.hp.input_length, self.hp.emb_size])
+        in_features=features
 
+        # with tf.variable_scope("temporal_attention_1"):
         x = t_attention(hiddens=features, hidden=pre_features, hidden_units=self.hp.emb_size,dropout_rate = self.hp.dropout, is_training=self.hp.is_training) # temporal attention
         x = tf.reshape(x, shape=[-1, self.hp.site_num, self.hp.output_length, self.hp.emb_size])
         x = tf.transpose(x, perm=[0, 2, 1, 3])
@@ -142,14 +142,19 @@ class Decoder_ST(object):
         bias = tf.Variable(tf.truncated_normal(shape=[self.hp.emb_size]), name='bias')
         z = tf.nn.sigmoid(tf.add(tf.add_n([tf.layers.dense(x, self.hp.emb_size,
                                                            kernel_initializer=tf.truncated_normal_initializer(
-                                                               dtype=tf.float32), name='w_1'),
+                                                               dtype=tf.float32), name='w_1',reuse=tf.AUTO_REUSE),
                                            tf.layers.dense(x, self.hp.emb_size,
                                                            kernel_initializer=tf.truncated_normal_initializer(
-                                                               dtype=tf.float32), name='w_2')]), bias))
+                                                               dtype=tf.float32), name='w_2',reuse=tf.AUTO_REUSE)]), bias))
         # z = tf.nn.sigmoid(tf.add(tf.add_n([tf.matmul(x,w_1), tf.matmul(encoder_gcn_out,w_2)]),bias))
         encoder_out = tf.multiply(z, x) + tf.multiply(1 - z, encoder_gcn_out)
         encoder_out = tf.reshape(encoder_out, shape=[self.hp.batch_size, self.hp.output_length, self.hp.site_num, self.hp.emb_size])
         encoder_out = tf.transpose(encoder_out, [0, 2, 1, 3])
+        encoder_out = tf.reshape(encoder_out, shape=[-1, self.hp.output_length, self.hp.emb_size])
+
+        # with tf.variable_scope("temporal_attention_2"):
+        encoder_out = t_attention(hiddens=in_features, hidden=encoder_out, hidden_units=self.hp.emb_size,dropout_rate = self.hp.dropout, is_training=self.hp.is_training)
+        encoder_out = tf.reshape(encoder_out, shape=[self.hp.batch_size, self.hp.site_num, self.hp.output_length, self.hp.emb_size])
         results = tf.layers.dense(inputs=encoder_out, units=1, name='layer', reuse=tf.AUTO_REUSE)
         results = tf.squeeze(results, axis=-1,name='output_y')
         return results

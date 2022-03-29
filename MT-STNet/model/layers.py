@@ -105,7 +105,7 @@ class GraphConvolution():
             output += self.vars['bias']
 
         # residual connection layer
-        res_c = tf.layers.dense(inputs=inputs, units=self.output_dim, name=self.res_name)
+        res_c = tf.layers.dense(inputs=inputs, units=self.output_dim, name=self.res_name,reuse=tf.AUTO_REUSE)
 
         return tf.add(x=self.act(output), y=res_c)
 

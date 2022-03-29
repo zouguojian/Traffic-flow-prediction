@@ -117,7 +117,7 @@ def multihead_attention(key_emb,
                         is_training=True,
                         causality=False,
                         scope="multihead_attention",
-                        reuse=None):
+                        reuse=tf.AUTO_REUSE):
     '''Applies multihead attention.
 
     Args:
@@ -200,7 +200,7 @@ def multihead_attention(key_emb,
     return outputs
 
 
-def feedforward(inputs, num_units=[2048, 512], scope="multihead_attention", reuse=None):
+def feedforward(inputs, num_units=[2048, 512], scope="multihead_attention", reuse=tf.AUTO_REUSE):
     '''Point-wise feed forward net.
 
     Args:
