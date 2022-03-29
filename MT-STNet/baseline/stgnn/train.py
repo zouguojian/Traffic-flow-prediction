@@ -11,8 +11,8 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 logs_path = "board"
 
 
-from baseline.stgnn_for_dpp.utils import log_string, loadPEMSData
-from baseline.stgnn_for_dpp.model import STGNN
+from baseline.stgnn.utils import log_string, loadPEMSData
+from baseline.stgnn.model import STGNN
 
 parser = argparse.ArgumentParser()
 # parser.add_argument('--time_slot', type = int, default = 5,
