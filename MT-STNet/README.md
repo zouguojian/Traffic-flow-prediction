@@ -13,6 +13,10 @@ tf.disable_v2_behavior()；
 ---
 
 ## 模型实验结果
+### HA (Multi-steps)
+
+### ARIMA (Multi-steps)
+
 ### LSTM (Multi-steps)
 
 |评价指标         |6-1 steps|6-2 steps|6-3 steps|6-4 steps|6-5 steps|6-6 steps|
@@ -88,6 +92,28 @@ R^$2$ is: 0.944049
 | R<sup>2</sup>  |0.739462 |0.936499 |0.940104 |0.938585 |0.937646 |0.936981 | 
 
 #### 1-blocks and 4 heads for spatial, 1-blocks and 4 heads for temporal
+
+|评价指标         |6-1 steps|6-2 steps|6-3 steps|6-4 steps|6-5 steps|6-6 steps|
+|  ----          | ----    |  ----   |  ----   |----     |----     |----     |
+|epoch           |100      |100      |100      |100      |100      |100      |
+|embedding       |256      |256      |256      | 256     |256      |256      |
+| MAE            |4.511082 |4.531373 |4.549260 |4.581149 |4.600930 |4.583859 |
+| RMSE           |6.815795 |6.863963 |6.902728 |6.963062 |7.013478 |7.000430 |
+| R              |0.975591 |0.975223 |0.974928 |0.974468 |0.974093 |0.974137 |
+| R<sup>2</sup>  |0.951220 |0.950538 |0.949983 |0.949110 |0.948387 |0.948573 | 
+
+
+step-step inference  
+MAE is : 4.439943  
+RMSE is : 6.775270  
+R is: 0.975778  
+R^$2$ is: 0.951828  
+
+### MT-STNet (Multi-steps) without physical information
+MAE is : 4.505649  
+RMSE is : 6.850982  
+R is: 0.975496  
+R^$2$ is: 0.950746  
 
 |评价指标         |6-1 steps|6-2 steps|6-3 steps|6-4 steps|6-5 steps|6-6 steps|
 |  ----          | ----    |  ----   |  ----   |----     |----     |----     |
