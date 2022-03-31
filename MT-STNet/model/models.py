@@ -64,35 +64,35 @@ class GCN(Model):
 
     def _build(self):
 
-        self.layers.append(GraphConvolution(input_dim=self.input_dim,
-                                            output_dim=self.input_dim,
-                                            placeholders=self.placeholders,
-                                            supports=self.supports,
-                                            act=tf.nn.relu,
-                                            bias=True,
-                                            dropout=True,
-                                            sparse_inputs=False,
-                                            res_name='layer1'))
-
-        self.layers.append(GraphConvolution(input_dim=self.input_dim,
-                                            output_dim=self.input_dim,
-                                            placeholders=self.placeholders,
-                                            supports=self.supports,
-                                            act=tf.nn.relu,
-                                            bias=True,
-                                            dropout=True,
-                                            sparse_inputs=False,
-                                            res_name='layer2'))
-
-        self.layers.append(GraphConvolution(input_dim=self.input_dim,
-                                            output_dim=self.input_dim,
-                                            placeholders=self.placeholders,
-                                            supports=self.supports,
-                                            act=tf.nn.relu,
-                                            bias=True,
-                                            dropout=True,
-                                            sparse_inputs=False,
-                                            res_name='layer3'))
+        # self.layers.append(GraphConvolution(input_dim=self.input_dim,
+        #                                     output_dim=self.input_dim,
+        #                                     placeholders=self.placeholders,
+        #                                     supports=self.supports,
+        #                                     act=tf.nn.relu,
+        #                                     bias=True,
+        #                                     dropout=True,
+        #                                     sparse_inputs=False,
+        #                                     res_name='layer1'))
+        #
+        # self.layers.append(GraphConvolution(input_dim=self.input_dim,
+        #                                     output_dim=self.input_dim,
+        #                                     placeholders=self.placeholders,
+        #                                     supports=self.supports,
+        #                                     act=tf.nn.relu,
+        #                                     bias=True,
+        #                                     dropout=True,
+        #                                     sparse_inputs=False,
+        #                                     res_name='layer2'))
+        #
+        # self.layers.append(GraphConvolution(input_dim=self.input_dim,
+        #                                     output_dim=self.input_dim,
+        #                                     placeholders=self.placeholders,
+        #                                     supports=self.supports,
+        #                                     act=tf.nn.relu,
+        #                                     bias=True,
+        #                                     dropout=True,
+        #                                     sparse_inputs=False,
+        #                                     res_name='layer3'))
 
         self.layers.append(GraphConvolution(input_dim=self.input_dim,
                                             output_dim=self.input_dim,

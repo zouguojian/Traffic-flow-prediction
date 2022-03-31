@@ -34,6 +34,15 @@ tf.reset_default_graph()
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 logs_path = "board"
 
+# os.environ['CUDA_VISIBLE_DEVICES']='2'
+#
+# from tensorflow.compat.v1 import ConfigProto
+# from tensorflow.compat.v1 import InteractiveSession
+#
+# config = ConfigProto()
+# config.gpu_options.allow_growth = True
+# session = InteractiveSession(config=config)
+
 
 class Model(object):
     def __init__(self, hp):
@@ -154,54 +163,54 @@ class Model(object):
         :return:
         '''
         print('#................................in the encoder step......................................#')
-        # with tf.variable_scope(name_or_scope='encoder'):
-        '''
-        return, the gcn output --- for example, inputs.shape is :  (32, 3, 162, 32)
-        axis=0: bath size
-        axis=1: input data time size
-        axis=2: numbers of the nodes
-        axis=3: output feature size
-        '''
-        features=tf.layers.dense(self.placeholders['features'], units=self.hp.emb_size) # [B*L, site num, emb_size]
-        in_day = self.d_emd[:, :self.hp.input_length, :, :]
-        in_hour = self.h_emd[:, :self.hp.input_length, :, :]
-        in_mimute = self.m_emd[:, :self.hp.input_length, :, :]
-        in_position = self.p_emd[:, :self.hp.input_length, :, :]
+        with tf.variable_scope(name_or_scope='encoder'):
+            '''
+            return, the gcn output --- for example, inputs.shape is :  (32, 3, 162, 32)
+            axis=0: bath size
+            axis=1: input data time size
+            axis=2: numbers of the nodes
+            axis=3: output feature size
+            '''
+            features=tf.layers.dense(self.placeholders['features'], units=self.hp.emb_size) # [B*L, site num, emb_size]
+            in_day = self.d_emd[:, :self.hp.input_length, :, :]
+            in_hour = self.h_emd[:, :self.hp.input_length, :, :]
+            in_mimute = self.m_emd[:, :self.hp.input_length, :, :]
+            in_position = self.p_emd[:, :self.hp.input_length, :, :]
 
-        encoder=Encoder_ST(hp=self.hp, placeholders=self.placeholders, model_func=self.model_func)
-        encoder_out=encoder.encoder_spatio_temporal(features=features,
-                                                    day=in_day,
-                                                    hour=in_hour,
-                                                    minute=in_mimute,
-                                                    position=in_position,
-                                                    supports=self.supports)
-        print('encoder output shape is : ', encoder_out.shape)
+            encoder=Encoder_ST(hp=self.hp, placeholders=self.placeholders, model_func=self.model_func)
+            encoder_out=encoder.encoder_spatio_temporal(features=features,
+                                                        day=in_day,
+                                                        hour=in_hour,
+                                                        minute=in_mimute,
+                                                        position=in_position,
+                                                        supports=self.supports)
+            print('encoder output shape is : ', encoder_out.shape)
 
         print('#................................in the decoder step......................................#')
-        # with tf.variable_scope(name_or_scope='decoder'):
-        '''
-        return, the gcn output --- for example, inputs.shape is :  (32, 1, 162, 32)
-        axis=0: bath size
-        axis=1: input data time size
-        axis=2: numbers of the nodes
-        axis=3: output feature size
-        '''
-        out_day = self.d_emd[:, self.hp.input_length:, :, :]
-        out_hour = self.h_emd[:, self.hp.input_length:, :, :]
-        out_minute = self.m_emd[:, self.hp.input_length:, :, :]
-        out_position = self.p_emd[:, self.hp.input_length:, :, :]
+        with tf.variable_scope(name_or_scope='decoder'):
+            '''
+            return, the gcn output --- for example, inputs.shape is :  (32, 1, 162, 32)
+            axis=0: bath size
+            axis=1: input data time size
+            axis=2: numbers of the nodes
+            axis=3: output feature size
+            '''
+            out_day = self.d_emd[:, self.hp.input_length:, :, :]
+            out_hour = self.h_emd[:, self.hp.input_length:, :, :]
+            out_minute = self.m_emd[:, self.hp.input_length:, :, :]
+            out_position = self.p_emd[:, self.hp.input_length:, :, :]
 
-        decoder = Decoder_ST(hp=self.hp, placeholders=self.placeholders, model_func=self.model_func)
-        self.pre=decoder.decoder_spatio_temporal_1(features=encoder_out,
-                                                 day=out_day,
-                                                 hour=out_hour,
-                                                 minute=out_minute,
-                                                 position=out_position,
-                                                 supports=self.supports)
-        print('pres shape is : ', self.pre.shape)
+            decoder = Decoder_ST(hp=self.hp, placeholders=self.placeholders, model_func=self.model_func)
+            self.pre=decoder.decoder_spatio_temporal_1(features=encoder_out,
+                                                     day=out_day,
+                                                     hour=out_hour,
+                                                     minute=out_minute,
+                                                     position=out_position,
+                                                     supports=self.supports)
+            print('pres shape is : ', self.pre.shape)
 
         self.loss = tf.reduce_mean(
-            tf.sqrt(tf.reduce_mean(tf.square(self.pre + 1e-10 - self.placeholders['labels']), axis=0)))
+                tf.sqrt(tf.reduce_mean(tf.square(self.pre + 1e-10 - self.placeholders['labels']), axis=0)))
         self.train_op = tf.train.AdamOptimizer(self.hp.learning_rate).minimize(self.loss)
 
     def test(self):
@@ -317,6 +326,7 @@ class Model(object):
         if self.hp.normalize:
             label_list = np.array(
                 [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in label_list])
+            # print(label_list[0])
             predict_list = np.array(
                 [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in predict_list])
         else:
@@ -326,7 +336,7 @@ class Model(object):
         label_list = np.reshape(label_list, [-1])
         predict_list = np.reshape(predict_list, [-1])
         average_error, rmse_error, cor, R2 = accuracy(label_list, predict_list)  # 产生预测指标
-        self.describe(label_list, predict_list)   #预测值可视化
+        # self.describe(label_list, predict_list)   #预测值可视化
         return average_error
 
 

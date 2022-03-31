@@ -5,9 +5,6 @@ import numpy as np
 from sklearn.metrics import mean_squared_error,mean_absolute_error
 import numpy.linalg as la
 import math
-from sklearn.svm import SVR
-from statsmodels.tsa.arima_model import ARIMA
-
 
 def preprocess_data(data, time_len, rate, seq_len, pre_len):
     data1 = np.mat(data)

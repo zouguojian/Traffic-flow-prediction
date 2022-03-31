@@ -117,7 +117,7 @@ def multihead_attention(key_emb,
                         is_training=True,
                         causality=False,
                         scope="multihead_attention",
-                        reuse=tf.AUTO_REUSE):
+                        reuse=None):
     '''Applies multihead attention.
 
     Args:
@@ -200,7 +200,7 @@ def multihead_attention(key_emb,
     return outputs
 
 
-def feedforward(inputs, num_units=[2048, 512], scope="multihead_attention", reuse=tf.AUTO_REUSE):
+def feedforward(inputs, num_units=[2048, 512], scope="multihead_attention", reuse=None):
     '''Point-wise feed forward net.
 
     Args:
@@ -296,7 +296,7 @@ class Transformer():
             minute = tf.reshape(minute, shape=[self.batch * input_length, self.site_num, self.hidden_units])
             position = tf.reshape(position, shape=[self.batch * input_length, self.site_num, self.hidden_units])
             # trick
-            self.en_emb = tf.add_n([self.en_emb, day, hour, minute])
+            self.en_emb = tf.add_n([self.en_emb, hour, minute])
             # self.en_emb=tf.layers.dense(tf.concat([self.en_emb,day,hour],axis=-1),units=self.hidden_units,name='add_speed_emb')
 
             self.enc = self.en_emb + position

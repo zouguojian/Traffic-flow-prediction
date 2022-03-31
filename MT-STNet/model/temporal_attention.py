@@ -37,7 +37,7 @@ def multihead_attention(queries,
                         num_heads=8,
                         scope="multihead_attention",
                         reuse=tf.AUTO_REUSE,
-                        dropout_rate=0.,
+                        dropout_rate=0,
                         is_training=False):
     '''Applies multihead attention.
 
@@ -169,7 +169,7 @@ def label_smoothing(inputs, epsilon=0.1):
 
 
 
-def t_attention(hiddens, hidden, hidden_units=64, num_heads=4, num_blocks = 4, dropout_rate = 0.0, is_training=True):
+def t_attention(hiddens, hidden, hidden_units=64, num_heads=1, num_blocks = 1, dropout_rate = 0.0, is_training=True):
     '''
     :param hiddens: [batch , input_length, site num, hidden size]
     :param hidden: [batch , 1, site num, hidden size]
