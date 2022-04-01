@@ -35,7 +35,7 @@ parser.add_argument('--train_ratio', type=float, default=0.8,
 #                     help='validation set [default : 0.1]')
 parser.add_argument('--test_ratio', type=float, default=0.2,
                     help='testing set [default : 0.2]')
-parser.add_argument('--batch_size', type=int, default=128,
+parser.add_argument('--batch_size', type=int, default=1,
                     help='batch size')
 parser.add_argument('--max_epoch', type=int, default=100,
                     help='epoch to run')
@@ -214,10 +214,10 @@ def metric(pred, label):
         mae = np.abs(np.subtract(pred, label)).astype(np.float32)
         rmse = np.square(mae)
         mape = np.divide(mae, label)
-        mae = np.nan_to_num(mae * mask)
+        # mae = np.nan_to_num(mae * mask)
         # wape = np.divide(np.sum(mae), np.sum(label))
         mae = np.mean(mae)
-        rmse = np.nan_to_num(rmse * mask)
+        # rmse = np.nan_to_num(rmse * mask)
         rmse = np.sqrt(np.mean(rmse))
         mape = np.nan_to_num(mape * mask)
         mape = np.mean(mape)

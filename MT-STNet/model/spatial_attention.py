@@ -287,7 +287,7 @@ class Transformer():
         :param hour: [batch , time, site num, hidden size]
         :return:
         '''
-        # Encoder
+
         with tf.variable_scope("encoder"):
             # embedding
             self.en_emb = tf.reshape(inputs, shape=[self.batch * input_length, self.site_num, self.hidden_units])

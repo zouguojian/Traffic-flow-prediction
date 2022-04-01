@@ -19,6 +19,8 @@ from model.utils import *
 from model.models import GCN
 from model.hyparameter import parameter
 from model.embedding import embedding
+from model.encoder import Encoder_ST
+from model.decoder import Decoder_ST
 from baseline.lstm.lstm import LstmClass
 from baseline.bi_lstm.bi_lstm import BilstmClass
 from baseline.dela.dela import DelaClass
@@ -34,6 +36,15 @@ import argparse
 tf.reset_default_graph()
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 logs_path = "board"
+
+# os.environ['CUDA_VISIBLE_DEVICES']='1'
+#
+# from tensorflow.compat.v1 import ConfigProto
+# from tensorflow.compat.v1 import InteractiveSession
+#
+# config = ConfigProto()
+# config.gpu_options.allow_growth = True
+# session = InteractiveSession(config=config)
 
 
 class Model(object):
@@ -174,7 +185,6 @@ class Model(object):
             inputs = tf.reshape(inputs, shape=[self.hp.batch_size * self.hp.site_num, self.hp.input_length,
                                                self.hp.features])
             h_states= encoder_init.encoding(inputs)
-
             # decoder
             print('#................................in the decoder step......................................#')
             # this step to presict the polutant concentration
@@ -208,7 +218,7 @@ class Model(object):
             in_hour = self.h_emd[:, :self.hp.input_length, :, :]
             in_mimute = self.m_emd[:, :self.hp.input_length, :, :]
             in_position = self.p_emd[:, :self.hp.input_length, :, :]
-            embeddings=[in_day, in_hour, in_mimute, in_position]
+            embeddings=[in_hour, in_mimute, in_position]
             # this step use to encoding the input series data
             encoder_init = DelaClass(self.hp, placeholders=self.placeholders)
             x = encoder_init.encoding(features)
@@ -303,7 +313,7 @@ class Model(object):
         if not self.hp.is_training:
             print('the model weights has been loaded:')
             self.saver.restore(self.sess, model_file)
-            self.saver.save(self.sess, save_path='gcn/model/' + 'model.ckpt')
+            # self.saver.save(self.sess, save_path='gcn/model/' + 'model.ckpt')
 
         iterate_test = data_load.DataClass(hp=self.hp)
         test_next = iterate_test.next_batch(batch_size=self.hp.batch_size, epoch=1, is_training=False)
@@ -325,13 +335,13 @@ class Model(object):
             feed_dict.update({self.placeholders['dropout']: 0.0})
 
             pre = self.sess.run((self.pre), feed_dict=feed_dict)
-            label_list.append(label)
-            predict_list.append(pre)
+            label_list.append(label[:,:,:6])
+            predict_list.append(pre[:,:,:6])
 
         label_list = np.reshape(np.array(label_list, dtype=np.float32),
-                                [-1, self.hp.site_num, self.hp.output_length]).transpose([1, 0, 2])
+                                [-1, self.hp.site_num, 6]).transpose([1, 0, 2])
         predict_list = np.reshape(np.array(predict_list, dtype=np.float32),
-                                  [-1, self.hp.site_num, self.hp.output_length]).transpose([1, 0, 2])
+                                  [-1, self.hp.site_num, 6]).transpose([1, 0, 2])
         if self.hp.normalize:
             label_list = np.array(
                 [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in label_list])
@@ -343,9 +353,9 @@ class Model(object):
 
         label_list = np.reshape(label_list, [-1])
         predict_list = np.reshape(predict_list, [-1])
-        average_error, rmse_error, cor, R2 = accuracy(label_list, predict_list)  # 产生预测指标
-        self.describe(label_list, predict_list)   #预测值可视化
-        return average_error
+        mae, rmse, mape, cor, r2=metric(predict_list,label_list)
+        # self.describe(label_list, predict_list)   #预测值可视化
+        return mae
 
 
 def main(argv=None):

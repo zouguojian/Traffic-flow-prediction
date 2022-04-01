@@ -3,13 +3,13 @@ loading end....
 model constructed begin....
 model constructed end....
 test start....
-step 1, mae: 4.668860, rmse: 6.976429, mape: 0.306675,cor:0.975510,r2:0.951528
-step 2, mae: 4.739987, rmse: 7.128908, mape: 0.309933,cor:0.974397,r2:0.949362
-step 3, mae: 4.819024, rmse: 7.294737, mape: 0.313868,cor:0.973167,r2:0.946967
-step 4, mae: 4.898437, rmse: 7.464500, mape: 0.317769,cor:0.971883,r2:0.944466
-step 5, mae: 4.977795, rmse: 7.631687, mape: 0.321731,cor:0.970586,r2:0.941945
-step 6, mae: 5.058583, rmse: 7.800256, mape: 0.325714,cor:0.969247,r2:0.939347
-average, mae: 5.0586, rmse: 7.8003, mape: 0.3257,cor:0.9692,r2:0.9393
+step 1, mae: 4.512238, rmse: 6.795296, mape: 0.306675,cor:0.975510,r2:0.951528
+step 2, mae: 4.579610, rmse: 6.945295, mape: 0.309933,cor:0.974397,r2:0.949362
+step 3, mae: 4.654478, rmse: 7.107438, mape: 0.313868,cor:0.973167,r2:0.946967
+step 4, mae: 4.729927, rmse: 7.272903, mape: 0.317769,cor:0.971883,r2:0.944466
+step 5, mae: 4.805361, rmse: 7.435937, mape: 0.321731,cor:0.970586,r2:0.941945
+step 6, mae: 4.882080, rmse: 7.600285, mape: 0.325714,cor:0.969247,r2:0.939347
+average, mae: 4.8821, rmse: 7.6003, mape: 0.3257,cor:0.9692,r2:0.9393
 
 
 results:

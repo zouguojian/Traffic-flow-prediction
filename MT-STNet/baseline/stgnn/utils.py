@@ -37,10 +37,19 @@ def seq2instance(data, P, Q):
     num_sample = num_step - P - Q + 1
     x = np.zeros(shape=(num_sample, P, dims))
     y = np.zeros(shape=(num_sample, Q, dims))
+    # x=[]
+    # y=[]
+    # k=6
+
     for i in range(num_sample):
         x[i] = data[i: i + P]
         y[i] = data[i + P: i + P + Q]
     return x, y
+
+    # for i in range(0, num_sample,k):
+    #     x.append(data[i: i + P])
+    #     y.append(data[i + P: i + P + Q])
+    # return np.array(x), np.array(y)
 
 
 def loadData(args):
@@ -54,7 +63,7 @@ def loadData(args):
     val_steps = num_step - train_steps - test_steps
     train = Traffic[: train_steps]
     # val = Traffic[train_steps: train_steps + val_steps]
-    test = Traffic[-test_steps:]
+    test = Traffic[-(num_step - train_steps):]
     # X, Y 
     trainX, trainY = seq2instance(train, args.P, args.Q)
     # valX, valY = seq2instance(val, args.P, args.Q)

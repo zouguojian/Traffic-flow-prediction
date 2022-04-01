@@ -110,6 +110,12 @@ class Model(object):
         '''
         :return:
         '''
+        self.edge = embedding(self.hp.edge_num, num_units=self.hp.emb_size,
+                              scale=False, scope="edge_embed")
+        self.edge_dis = tf.get_variable('dis_embed',
+                                        dtype=tf.float32,
+                                        shape=[self.hp.site_num*self.hp.site_num, 1],
+                                        initializer=tf.truncated_normal_initializer(mean=0, stddev=1, seed=0))
         with tf.variable_scope('position'):
             p_emd = embedding(self.placeholders['position'], vocab_size=self.hp.site_num,
                               num_units=self.hp.emb_size,
@@ -117,46 +123,24 @@ class Model(object):
             p_emd = tf.reshape(p_emd, shape=[1, self.hp.site_num, self.hp.emb_size])
             p_emd = tf.expand_dims(p_emd, axis=0)
             self.p_emd = tf.tile(p_emd, [self.hp.batch_size, self.hp.input_length+self.hp.output_length, 1, 1])
-            print('p_emd shape is : ', self.p_emd.shape)
-
         with tf.variable_scope('day'):
             self.d_emb = embedding(self.placeholders['day'], vocab_size=32, num_units=self.hp.emb_size,
                                    scale=False, scope="day_embed")
             self.d_emd = tf.reshape(self.d_emb,
                                     shape=[self.hp.batch_size, self.hp.input_length + self.hp.output_length,
                                            self.hp.site_num, self.hp.emb_size])
-            print('d_emd shape is : ', self.d_emd.shape)
-
         with tf.variable_scope('hour'):
             self.h_emb = embedding(self.placeholders['hour'], vocab_size=24, num_units=self.hp.emb_size,
                                    scale=False, scope="hour_embed")
             self.h_emd = tf.reshape(self.h_emb,
                                     shape=[self.hp.batch_size, self.hp.input_length + self.hp.output_length,
                                            self.hp.site_num, self.hp.emb_size])
-            print('h_emd shape is : ', self.h_emd.shape)
-
         with tf.variable_scope('mimute'):
             self.m_emb = embedding(self.placeholders['minute'], vocab_size=12, num_units=self.hp.emb_size,
                                    scale=False, scope="minute_embed")
             self.m_emd = tf.reshape(self.m_emb,
                                     shape=[self.hp.batch_size, self.hp.input_length + self.hp.output_length,
                                            self.hp.site_num, self.hp.emb_size])
-            print('m_emd shape is : ', self.m_emd.shape)
-
-        '''
-        with tf.variable_scope('position_gcn'): # using the gcn to extract position relationship
-            p_emb = tf.reshape(self.p_emd, shape=[-1, self.para.site_num, self.para.emb_size])
-            p_gcn = self.model_func(self.placeholders,
-                                    input_dim=self.para.emb_size,
-                                    para=self.para,
-                                    supports=self.supports)
-            p_emd = p_gcn.predict(p_emb)
-            self.g_p_emd = tf.reshape(p_emd, shape=[self.para.batch_size,
-                                                    self.para.input_length,
-                                                    self.para.site_num,
-                                                    self.para.gcn_output_size])
-            print('p_emd shape is : ', self.g_p_emd.shape)
-        '''
 
     def model(self):
         '''
@@ -202,11 +186,11 @@ class Model(object):
 
             decoder = Decoder_ST(hp=self.hp, placeholders=self.placeholders, model_func=self.model_func)
             self.pre=decoder.decoder_spatio_temporal_1(features=encoder_out,
-                                                     day=out_day,
-                                                     hour=out_hour,
-                                                     minute=out_minute,
-                                                     position=out_position,
-                                                     supports=self.supports)
+                                                       day=out_day,
+                                                       hour=out_hour,
+                                                       minute=out_minute,
+                                                       position=out_position,
+                                                       supports=self.supports)
             print('pres shape is : ', self.pre.shape)
 
         self.loss = tf.reduce_mean(
@@ -316,13 +300,13 @@ class Model(object):
             feed_dict.update({self.placeholders['dropout']: 0.0})
 
             pre = self.sess.run((self.pre), feed_dict=feed_dict)
-            label_list.append(label)
-            predict_list.append(pre)
+            label_list.append(label[:,:,:6])
+            predict_list.append(pre[:,:,:6])
 
         label_list = np.reshape(np.array(label_list, dtype=np.float32),
-                                [-1, self.hp.site_num, self.hp.output_length]).transpose([1, 0, 2])
+                                [-1, self.hp.site_num, 6]).transpose([1, 0, 2])
         predict_list = np.reshape(np.array(predict_list, dtype=np.float32),
-                                  [-1, self.hp.site_num, self.hp.output_length]).transpose([1, 0, 2])
+                                  [-1, self.hp.site_num, 6]).transpose([1, 0, 2])
         if self.hp.normalize:
             label_list = np.array(
                 [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in label_list])
@@ -335,9 +319,10 @@ class Model(object):
 
         label_list = np.reshape(label_list, [-1])
         predict_list = np.reshape(predict_list, [-1])
-        average_error, rmse_error, cor, R2 = accuracy(label_list, predict_list)  # 产生预测指标
+        # average_error, rmse_error, cor, R2 = accuracy(label_list, predict_list)  # 产生预测指标
+        mae, rmse, mape, cor, r2=metric(predict_list,label_list)
         # self.describe(label_list, predict_list)   #预测值可视化
-        return average_error
+        return mae
 
 
 def main(argv=None):

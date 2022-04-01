@@ -6,7 +6,7 @@ class parameter(object):
         self.parser=parser
 
         self.parser.add_argument('--save_path', type=str, default='weights/MT_STNet_no_physical/', help='save path')
-        self.parser.add_argument('--model_name', type=str, default='gmna', help='training or testing model name')
+        self.parser.add_argument('--model_name', type=str, default='dela', help='training or testing model name')
 
         self.parser.add_argument('--divide_ratio', type=float, default=0.8, help='data_divide')
         self.parser.add_argument('--is_training', type=bool, default=True, help='is training')
@@ -16,6 +16,7 @@ class parameter(object):
         self.parser.add_argument('--learning_rate', type=float, default=0.0005, help='learning rate')
         self.parser.add_argument('--dropout', type=float, default=0.3, help='drop out')
         self.parser.add_argument('--site_num', type=int, default=66, help='total number of road')
+        self.parser.add_argument('--edge_num', type=int, default=108, help='total number of edge')
         self.parser.add_argument('--num_heads', type=int, default=4, help='total number of head attentions')
         self.parser.add_argument('--num_blocks', type=int, default=1, help='total number of attention layers')
 
