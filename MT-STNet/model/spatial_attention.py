@@ -120,7 +120,8 @@ def multihead_attention(key_emb,
                         reuse=None,
                         sp=None,
                         dis=None,
-                        site_num=66):
+                        site_num=66,
+                        arg=None):
     '''Applies multihead attention.
 
     Args:
@@ -159,24 +160,25 @@ def multihead_attention(key_emb,
         # Scale
         outputs = outputs / (K_.get_shape().as_list()[-1] ** 0.5)
 
-        dis = tf.expand_dims(tf.squeeze(dis),axis=0)
-        outputs = tf.add(outputs,dis) # physical information
+        if arg.model_name=='MT_STNet':
+            dis = tf.expand_dims(tf.squeeze(dis),axis=0)
+            outputs = tf.add(outputs,dis) # physical information
 
-        sp = tf.reshape(sp,shape=[site_num,site_num,sp.shape[1],sp.shape[2]])
-        sp = tf.expand_dims(sp,axis=0)
-        sp = tf.concat(tf.split(sp, num_heads, axis=-1), axis=0)
-        w_n = tf.Variable(tf.truncated_normal(shape=[15, num_units // num_heads]), name='weight_edge')
-        w_n = tf.reshape(w_n,[1,1,1,15,num_units//num_heads])
-        sp = tf.reduce_sum(tf.multiply(sp, w_n), axis=-1)
-        # sp = tf.reduce_sum(tf.multiply(sp,sp),axis=-1)
-        sp = tf.reduce_mean(sp,axis=-1)
-        # print(sp.shape, dis.shape)
+            sp = tf.reshape(sp,shape=[site_num,site_num,sp.shape[1],sp.shape[2]])
+            sp = tf.expand_dims(sp,axis=0)
+            sp = tf.concat(tf.split(sp, num_heads, axis=-1), axis=0)
+            w_n = tf.Variable(tf.truncated_normal(shape=[15, num_units // num_heads]), name='weight_edge')
+            w_n = tf.reshape(w_n,[1,1,1,15,num_units//num_heads])
+            sp = tf.reduce_sum(tf.multiply(sp, w_n), axis=-1)
+            # sp = tf.reduce_sum(tf.multiply(sp,sp),axis=-1)
+            sp = tf.reduce_mean(sp,axis=-1)
+            # print(sp.shape, dis.shape)
 
-        sp = tf.concat(tf.split(sp, num_heads, axis=0), axis=-1)
-        outputs = tf.concat(tf.split(outputs, num_heads, axis=0), axis=-1)
-        # print(sp.shape,outputs.shape)
-        outputs = tf.add(outputs,sp) # physical information
-        outputs = tf.concat(tf.split(outputs, num_heads, axis=-1), axis=0)
+            sp = tf.concat(tf.split(sp, num_heads, axis=0), axis=-1)
+            outputs = tf.concat(tf.split(outputs, num_heads, axis=0), axis=-1)
+            # print(sp.shape,outputs.shape)
+            outputs = tf.add(outputs,sp) # physical information
+            outputs = tf.concat(tf.split(outputs, num_heads, axis=-1), axis=0)
 
 
         # Key Masking
@@ -294,6 +296,7 @@ def label_smoothing(inputs, epsilon=0.1):
 
 class Transformer():
     def __init__(self, arg):
+        self.arg = arg
         self.is_training = arg.is_training
         self.hidden_units = arg.emb_size
         self.batch = arg.batch_size
@@ -320,8 +323,9 @@ class Transformer():
             position = tf.reshape(position, shape=[self.batch * input_length, self.site_num, self.hidden_units])
             # trick
             self.en_emb = tf.add_n([self.en_emb, hour, minute]) # physical information
-            deg_emb = tf.add(in_deg,out_deg)
-            self.en_emb = tf.add(self.en_emb,deg_emb)
+            if self.arg.model_name == 'MT_STNet':
+                deg_emb = tf.add(in_deg,out_deg)
+                self.en_emb = tf.add(self.en_emb,deg_emb)
             # self.en_emb=tf.layers.dense(tf.concat([self.en_emb,day,hour],axis=-1),units=self.hidden_units,name='add_speed_emb')
 
             self.enc = self.en_emb + position
@@ -346,7 +350,8 @@ class Transformer():
                                                    causality=False,
                                                    sp=sp,
                                                    dis=dis,
-                                                   site_num=self.site_num)
+                                                   site_num=self.site_num,
+                                                   arg=self.arg)
                     ### Feed Forward
                     self.enc = feedforward(self.enc, num_units=[4 * self.hidden_units, self.hidden_units])
                     self.enc = self.enc + self.en_emb

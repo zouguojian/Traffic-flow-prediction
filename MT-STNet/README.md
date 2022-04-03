@@ -68,10 +68,6 @@ tf.disable_v2_behavior()；
 | R<sup>2</sup>  |0.951528 |0.949408 |0.946959 |0.944174 |0.942221 |0.939420 |
 
 ### GMAN (Multi-steps)  
-> Embedding size is 256  
-
-
-### ST-GAT (6-steps)  
 #### 1-blocks and 1 heads for spatial, 4-blocks and 1 heads for temporal
 
 |评价指标         |4-6 steps|5-6 steps|6-6 steps|7-6 steps|8-6 steps|9-6 steps|
@@ -81,27 +77,24 @@ tf.disable_v2_behavior()；
 | MAE            |14.322435|6.550879 |6.372804 |6.439330 |6.479654 |6.501210 |
 | RMSE           |20.525616|10.132798|9.840441 |9.963966 |10.042691|10.095425|
 | R              |0.927124 |0.968368 |0.970164 |0.969012 |0.968415 |0.968201 |
-| R<sup>2</sup>  |0.739462 |0.936499 |0.940104 |0.938585 |0.937646 |0.936981 | 
+| R<sup>2</sup>  |0.739462 |0.936499 |0.940104 |0.938585 |0.937646 |0.936981 |   
 
-#### 1-blocks and 4 heads for spatial, 1-blocks and 4 heads for temporal
-
+### MT-STNet (Multi-steps)
 |评价指标         |6-1 steps|6-2 steps|6-3 steps|6-4 steps|6-5 steps|6-6 steps|
 |  ----          | ----    |  ----   |  ----   |----     |----     |----     |
 |epoch           |100      |100      |100      |100      |100      |100      |
 |embedding       |256      |256      |256      | 256     |256      |256      |
-| MAE            |4.511082 |4.531373 |4.549260 |4.581149 |4.600930 |4.583859 |
-| RMSE           |6.815795 |6.863963 |6.902728 |6.963062 |7.013478 |7.000430 |
-| R              |0.975591 |0.975223 |0.974928 |0.974468 |0.974093 |0.974137 |
-| R<sup>2</sup>  |0.951220 |0.950538 |0.949983 |0.949110 |0.948387 |0.948573 | 
+| MAE            |4.342740 |4.264150 |4.286956 |4.353868 |4.425250 |4.434163 |
+| RMSE           |6.457775 |6.497790 |6.472476 |6.652350 |6.755280 |6.754442 |
+| MAPE           |0.297516 |0.304397 |0.301575 |0.301453 |0.299813 |0.301061 |
+| R              |0.976774 |0.975563 |0.976396 |0.975716 |0.975885 |0.975886 |
+| R<sup>2</sup>  |0.953795 |0.951497 |0.953141 |0.951817 |0.952119 |0.952124 | 
 
+### MT-STNet-1 (Multi-steps) dynamic step-by-step way
 
-step-step inference  
-MAE is : 4.439943  
-RMSE is : 6.775270  
-R is: 0.975778  
-R^$2$ is: 0.951828  
+### MT-STNet-2 (Multi-steps) not consider static spatial correlation
 
-### MT-STNet (Multi-steps) without physical information
+### MT-STNet-3 (Multi-steps) without physical information
 
 |评价指标         |6-1 steps|6-2 steps|6-3 steps|6-4 steps|6-5 steps|6-6 steps|
 |  ----          | ----    |  ----   |  ----   |----     |----     |----     |
