@@ -160,9 +160,13 @@ def preprocess_adj(adj):
 
 
 
-def construct_feed_dict(features, adj, labels,  day, hour, minute, placeholders, site_num=66):
+def construct_feed_dict(features, adj, labels,  day, hour, minute, placeholders, site_num=66,sp=None,dis=None,in_deg=None,out_deg=None):
     """Construct feed dictionary."""
     feed_dict = dict()
+    feed_dict.update({placeholders['sp']: sp})
+    feed_dict.update({placeholders['dis']: dis})
+    feed_dict.update({placeholders['in_deg']: in_deg})
+    feed_dict.update({placeholders['out_deg']: out_deg})
     feed_dict.update({placeholders['position']: np.array([[i for i in range(site_num)]],dtype=np.int32)})
     feed_dict.update({placeholders['labels']: labels})
     feed_dict.update({placeholders['day']: day})

@@ -19,6 +19,8 @@ from model.utils import *
 from model.models import GCN
 from model.hyparameter import parameter
 from model.embedding import embedding
+from model.sp_dis import sp_dis
+from model.degree import in_out_deg
 from model.encoder import Encoder_ST
 from model.decoder import Decoder_ST
 
@@ -76,6 +78,10 @@ class Model(object):
         :return:
         '''
         self.placeholders = {
+            'sp':tf.placeholder(tf.int32, shape=(self.hp.site_num*self.hp.site_num, 15), name='input_sp'),
+            'dis':tf.placeholder(tf.int32, shape=(self.hp.site_num, self.hp.site_num), name='input_dis'),
+            'in_deg': tf.placeholder(tf.int32, shape=(1,self.hp.site_num), name='input_in_deg'),
+            'out_deg': tf.placeholder(tf.int32, shape=(1, self.hp.site_num), name='input_out_deg'),
             'position': tf.placeholder(tf.int32, shape=(1, self.hp.site_num), name='input_position'),
             'day': tf.placeholder(tf.int32, shape=(None, self.hp.site_num), name='input_day'),
             'hour': tf.placeholder(tf.int32, shape=(None, self.hp.site_num), name='input_hour'),
@@ -83,11 +89,8 @@ class Model(object):
             'indices_i': tf.placeholder(dtype=tf.int64, shape=[None, None], name='input_indices'),
             'values_i': tf.placeholder(dtype=tf.float32, shape=[None], name='input_values'),
             'dense_shape_i': tf.placeholder(dtype=tf.int64, shape=[None], name='input_dense_shape'),
-            # None: batch size * time size
-            'features': tf.placeholder(tf.float32, shape=[None, self.hp.site_num, self.hp.features],
-                                       name='input_features'),
-            'labels': tf.placeholder(tf.float32, shape=[None, self.hp.site_num, self.hp.output_length],
-                                     name='labels'),
+            'features': tf.placeholder(tf.float32, shape=[None, self.hp.site_num, self.hp.features], name='input_features'),
+            'labels': tf.placeholder(tf.float32, shape=[None, self.hp.site_num, self.hp.output_length], name='labels'),
             'dropout': tf.placeholder_with_default(0., shape=(), name='input_dropout'),
             'num_features_nonzero': tf.placeholder(tf.int32, name='input_zero')  # helper variable for sparse dropout
         }
@@ -110,38 +113,35 @@ class Model(object):
         '''
         :return:
         '''
-        self.edge = embedding(self.hp.edge_num, num_units=self.hp.emb_size,
-                              scale=False, scope="edge_embed")
-        self.edge_dis = tf.get_variable('dis_embed',
-                                        dtype=tf.float32,
-                                        shape=[self.hp.site_num*self.hp.site_num, 1],
-                                        initializer=tf.truncated_normal_initializer(mean=0, stddev=1, seed=0))
+        self.sp_emb = embedding(self.placeholders['sp'],vocab_size=self.hp.edge_num+1, num_units=self.hp.emb_size,scale=False, scope="sp_embed")
+        self.dis_emb = embedding(self.placeholders['dis'],vocab_size=734, num_units=1, scale=False, scope="dis_embed")
+        self.in_deg_emb = embedding(self.placeholders['in_deg'], vocab_size=5, num_units=self.hp.emb_size, scale=False, scope="in_embed")
+        self.out_deg_emb = embedding(self.placeholders['out_deg'], vocab_size=5, num_units=self.hp.emb_size, scale=False, scope="out_embed")
+
+        # self.edge_dis = tf.get_variable('dis_embed',
+        #                                 dtype=tf.float32,
+        #                                 shape=[self.hp.site_num*self.hp.site_num, 1],
+        #                                 initializer=tf.truncated_normal_initializer(mean=0, stddev=1, seed=0))
         with tf.variable_scope('position'):
-            p_emd = embedding(self.placeholders['position'], vocab_size=self.hp.site_num,
-                              num_units=self.hp.emb_size,
-                              scale=False, scope="position_embed")
+            p_emd = embedding(self.placeholders['position'], vocab_size=self.hp.site_num,num_units=self.hp.emb_size,scale=False, scope="position_embed")
             p_emd = tf.reshape(p_emd, shape=[1, self.hp.site_num, self.hp.emb_size])
             p_emd = tf.expand_dims(p_emd, axis=0)
             self.p_emd = tf.tile(p_emd, [self.hp.batch_size, self.hp.input_length+self.hp.output_length, 1, 1])
         with tf.variable_scope('day'):
-            self.d_emb = embedding(self.placeholders['day'], vocab_size=32, num_units=self.hp.emb_size,
-                                   scale=False, scope="day_embed")
+            self.d_emb = embedding(self.placeholders['day'], vocab_size=32, num_units=self.hp.emb_size,scale=False, scope="day_embed")
             self.d_emd = tf.reshape(self.d_emb,
                                     shape=[self.hp.batch_size, self.hp.input_length + self.hp.output_length,
                                            self.hp.site_num, self.hp.emb_size])
         with tf.variable_scope('hour'):
-            self.h_emb = embedding(self.placeholders['hour'], vocab_size=24, num_units=self.hp.emb_size,
-                                   scale=False, scope="hour_embed")
+            self.h_emb = embedding(self.placeholders['hour'], vocab_size=24, num_units=self.hp.emb_size,scale=False, scope="hour_embed")
             self.h_emd = tf.reshape(self.h_emb,
                                     shape=[self.hp.batch_size, self.hp.input_length + self.hp.output_length,
                                            self.hp.site_num, self.hp.emb_size])
         with tf.variable_scope('mimute'):
-            self.m_emb = embedding(self.placeholders['minute'], vocab_size=12, num_units=self.hp.emb_size,
-                                   scale=False, scope="minute_embed")
+            self.m_emb = embedding(self.placeholders['minute'], vocab_size=12, num_units=self.hp.emb_size,scale=False, scope="minute_embed")
             self.m_emd = tf.reshape(self.m_emb,
                                     shape=[self.hp.batch_size, self.hp.input_length + self.hp.output_length,
                                            self.hp.site_num, self.hp.emb_size])
-
     def model(self):
         '''
         :return:
@@ -167,7 +167,11 @@ class Model(object):
                                                         hour=in_hour,
                                                         minute=in_mimute,
                                                         position=in_position,
-                                                        supports=self.supports)
+                                                        supports=self.supports,
+                                                        sp=self.sp_emb,
+                                                        dis=self.dis_emb,
+                                                        in_deg=self.in_deg_emb,
+                                                        out_deg=self.out_deg_emb)
             print('encoder output shape is : ', encoder_out.shape)
 
         print('#................................in the decoder step......................................#')
@@ -190,7 +194,11 @@ class Model(object):
                                                        hour=out_hour,
                                                        minute=out_minute,
                                                        position=out_position,
-                                                       supports=self.supports)
+                                                       supports=self.supports,
+                                                       sp=self.sp_emb,
+                                                       dis=self.dis_emb,
+                                                       in_deg=self.in_deg_emb,
+                                                       out_deg=self.out_deg_emb)
             print('pres shape is : ', self.pre.shape)
 
         self.loss = tf.reduce_mean(
@@ -247,7 +255,9 @@ class Model(object):
             day = np.reshape(day, [-1, self.hp.site_num])
             hour = np.reshape(hour, [-1, self.hp.site_num])
             minute = np.reshape(minute, [-1, self.hp.site_num])
-            feed_dict = construct_feed_dict(features, self.adj, label, day, hour, minute, self.placeholders, site_num=self.hp.site_num)
+            sp,dis = sp_dis(hp=self.hp)
+            in_deg, out_deg = in_out_deg(self.hp)
+            feed_dict = construct_feed_dict(features, self.adj, label, day, hour, minute, self.placeholders, site_num=self.hp.site_num,sp=sp,dis=dis,in_deg=in_deg,out_deg=out_deg)
             feed_dict.update({self.placeholders['dropout']: self.hp.dropout})
             loss_, _ = self.sess.run((self.loss, self.train_op), feed_dict=feed_dict)
             print("after %d steps,the training average loss value is : %.6f" % (i, loss_))
@@ -295,8 +305,9 @@ class Model(object):
             day = np.reshape(day, [-1, self.hp.site_num])
             hour = np.reshape(hour, [-1, self.hp.site_num])
             minute = np.reshape(minute, [-1, self.hp.site_num])
-
-            feed_dict = construct_feed_dict(features, self.adj, label, day, hour, minute, self.placeholders, site_num=self.hp.site_num)
+            sp, dis = sp_dis(hp=self.hp)
+            in_deg, out_deg = in_out_deg(self.hp)
+            feed_dict = construct_feed_dict(features, self.adj, label, day, hour, minute, self.placeholders, site_num=self.hp.site_num,sp=sp,dis=dis,in_deg=in_deg,out_deg=out_deg)
             feed_dict.update({self.placeholders['dropout']: 0.0})
 
             pre = self.sess.run((self.pre), feed_dict=feed_dict)

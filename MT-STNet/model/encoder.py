@@ -39,7 +39,7 @@ class Encoder_ST(object):
         c = tf.multiply(f, states) + tf.multiply(i, c_t)
         return c
 
-    def encoder_spatio_temporal(self, features=None, day=None, hour=None, minute=None, position=None, supports=None):
+    def encoder_spatio_temporal(self, features=None, day=None, hour=None, minute=None, position=None, supports=None, sp=None, dis=None,in_deg=None,out_deg=None):
         '''
         :param flow:
         :param day:
@@ -69,7 +69,11 @@ class Encoder_ST(object):
                       day=day,
                       hour=hour,
                       minute=minute,
-                      position=position)  # spatial attention
+                      position=position,
+                      sp=sp,
+                      dis=dis,
+                      in_deg=in_deg,
+                      out_deg=out_deg)  # spatial attention
 
         # features=tf.add_n(inputs=[features, tf.reshape(day,[-1,self.hp.site_num, self.hp.emb_size]),
         #                     tf.reshape(hour,[-1,self.hp.site_num, self.hp.emb_size]),

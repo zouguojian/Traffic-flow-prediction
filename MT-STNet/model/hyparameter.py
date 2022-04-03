@@ -5,7 +5,7 @@ class parameter(object):
     def __init__(self,parser):
         self.parser=parser
 
-        self.parser.add_argument('--save_path', type=str, default='weights/MT_STNet_no_physical/', help='save path')
+        self.parser.add_argument('--save_path', type=str, default='weights/MT_STNet/', help='save path')
         self.parser.add_argument('--model_name', type=str, default='dela', help='training or testing model name')
 
         self.parser.add_argument('--divide_ratio', type=float, default=0.8, help='data_divide')
@@ -42,6 +42,10 @@ class parameter(object):
         self.parser.add_argument('--file_train', type=str, default='data/train.csv',help='training set address')
         self.parser.add_argument('--file_val', type=str, default='data/val.csv', help='validation set address')
         self.parser.add_argument('--file_test', type=str, default='data/test.csv', help='test set address')
+        self.parser.add_argument('--file_sp', type=str, default='data/sp.csv', help='sp set address')
+        self.parser.add_argument('--file_dis', type=str, default='data/dis.csv', help='dis set address')
+        self.parser.add_argument('--file_in_deg', type=str, default='data/in_deg.csv', help='in_deg set address')
+        self.parser.add_argument('--file_out_deg', type=str, default='data/out_deg.csv', help='out_deg set address')
 
         self.parser.add_argument('--file_adj', type=str, default='data/adjacent_fully.csv',
                                  help='adj file address')

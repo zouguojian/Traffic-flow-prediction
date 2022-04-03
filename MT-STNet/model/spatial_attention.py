@@ -117,7 +117,10 @@ def multihead_attention(key_emb,
                         is_training=True,
                         causality=False,
                         scope="multihead_attention",
-                        reuse=None):
+                        reuse=None,
+                        sp=None,
+                        dis=None,
+                        site_num=66):
     '''Applies multihead attention.
 
     Args:
@@ -155,6 +158,26 @@ def multihead_attention(key_emb,
 
         # Scale
         outputs = outputs / (K_.get_shape().as_list()[-1] ** 0.5)
+
+        dis = tf.expand_dims(tf.squeeze(dis),axis=0)
+        outputs = tf.add(outputs,dis) # physical information
+
+        sp = tf.reshape(sp,shape=[site_num,site_num,sp.shape[1],sp.shape[2]])
+        sp = tf.expand_dims(sp,axis=0)
+        sp = tf.concat(tf.split(sp, num_heads, axis=-1), axis=0)
+        w_n = tf.Variable(tf.truncated_normal(shape=[15, num_units // num_heads]), name='weight_edge')
+        w_n = tf.reshape(w_n,[1,1,1,15,num_units//num_heads])
+        sp = tf.reduce_sum(tf.multiply(sp, w_n), axis=-1)
+        # sp = tf.reduce_sum(tf.multiply(sp,sp),axis=-1)
+        sp = tf.reduce_mean(sp,axis=-1)
+        # print(sp.shape, dis.shape)
+
+        sp = tf.concat(tf.split(sp, num_heads, axis=0), axis=-1)
+        outputs = tf.concat(tf.split(outputs, num_heads, axis=0), axis=-1)
+        # print(sp.shape,outputs.shape)
+        outputs = tf.add(outputs,sp) # physical information
+        outputs = tf.concat(tf.split(outputs, num_heads, axis=-1), axis=0)
+
 
         # Key Masking
         key_masks = tf.sign(tf.abs(tf.reduce_sum(key_emb, axis=-1)))  # (N, T_k)
@@ -280,7 +303,7 @@ class Transformer():
         self.num_blocks = arg.num_blocks
         self.dropout_rate = arg.dropout
 
-    def encoder(self, inputs=None, input_length=1, day=None, hour=None, minute=None, position=None):
+    def encoder(self, inputs=None, input_length=1, day=None, hour=None, minute=None, position=None, sp=None, dis=None,in_deg=None,out_deg=None):
         '''
         :param inputs: [batch , time, site num, hidden size]
         :param day: [batch , time, site num, hidden size]
@@ -296,7 +319,9 @@ class Transformer():
             minute = tf.reshape(minute, shape=[self.batch * input_length, self.site_num, self.hidden_units])
             position = tf.reshape(position, shape=[self.batch * input_length, self.site_num, self.hidden_units])
             # trick
-            self.en_emb = tf.add_n([self.en_emb, hour, minute])
+            self.en_emb = tf.add_n([self.en_emb, hour, minute]) # physical information
+            deg_emb = tf.add(in_deg,out_deg)
+            self.en_emb = tf.add(self.en_emb,deg_emb)
             # self.en_emb=tf.layers.dense(tf.concat([self.en_emb,day,hour],axis=-1),units=self.hidden_units,name='add_speed_emb')
 
             self.enc = self.en_emb + position
@@ -318,7 +343,10 @@ class Transformer():
                                                    num_heads=self.num_heads,
                                                    dropout_rate=self.dropout_rate,
                                                    is_training=self.is_training,
-                                                   causality=False)
+                                                   causality=False,
+                                                   sp=sp,
+                                                   dis=dis,
+                                                   site_num=self.site_num)
                     ### Feed Forward
                     self.enc = feedforward(self.enc, num_units=[4 * self.hidden_units, self.hidden_units])
                     self.enc = self.enc + self.en_emb

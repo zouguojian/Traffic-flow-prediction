@@ -44,7 +44,7 @@ class Decoder_ST(object):
         c = tf.multiply(f, states) + tf.multiply(i, c_t)
         return c
 
-    def decoder_spatio_temporal(self, features=None, day=None, hour=None, minute=None, position=None, supports=None):
+    def decoder_spatio_temporal(self, features=None, day=None, hour=None, minute=None, position=None, supports=None, sp=None, dis=None,in_deg=None,out_deg=None):
         '''
         :param flow:
         :param day:
@@ -100,7 +100,7 @@ class Decoder_ST(object):
         return tf.concat(pres, axis=-1, name='output_y')
 
     def decoder_spatio_temporal_1(self, features=None, day=None, hour=None, minute=None, position=None, supports=None,
-                                  in_length=6):
+                                  in_length=6, sp=None, dis=None,in_deg=None,out_deg=None):
         '''
         :param flow:
         :param day:
@@ -131,7 +131,11 @@ class Decoder_ST(object):
                       day=day,
                       hour=hour,
                       minute=minute,
-                      position=position)  # spatial attention
+                      position=position,
+                      sp=sp,
+                      dis=dis,
+                      in_deg=in_deg,
+                      out_deg=out_deg)  # spatial attention
 
         features = tf.concat(tf.split(features, self.hp.num_heads, axis=2), axis=0)
         encoder_gcn = self.model_func(placeholders=self.placeholders,

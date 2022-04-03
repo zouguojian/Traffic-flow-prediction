@@ -72,6 +72,7 @@ def distance_path(graph,s,end):
 
 import pandas as pd
 import csv
+import numpy as np
 if __name__ == '__main__':
 
     # graph_dict = {
@@ -105,7 +106,6 @@ if __name__ == '__main__':
     print(distance_dict)
     print(distance_path(graph_dict,'in_101001','out_106007'))
 
-    # sp_matrix=[[roads_num for _ in range(site_num)] for _ in range(site_num)]
     file = open('/Users/guojianzou/Traffic-flow-prediction/MT-STNet/data/sp.csv', 'w', encoding='utf-8')
     writer = csv.writer(file)
     writer.writerow([i for i in range(site_num)])
@@ -120,3 +120,24 @@ if __name__ == '__main__':
             else:
                 writer.writerow([roads_num for _ in range(site_num)])
     file.close()
+
+    # sort_list=[]
+    # sp_matrix=[[roads_num for _ in range(site_num)] for _ in range(site_num)]
+    # file = open('/Users/guojianzou/Traffic-flow-prediction/MT-STNet/data/dis.csv', 'w', encoding='utf-8')
+    # writer = csv.writer(file)
+    # writer.writerow([i for i in range(site_num)])
+    # for station_index_i in station_index.values[:,0]:
+    #     parent_dict, distance_dict = dijkstra(graph_dict, station_index_i)
+    #
+    #     for key in distance_dict:
+    #         sp_matrix[station_index_dict[station_index_i]][station_index_dict[key]]=distance_dict[key]
+    #         if sp_matrix[station_index_dict[station_index_i]][station_index_dict[key]] not in sort_list:
+    #             sort_list.append(sp_matrix[station_index_dict[station_index_i]][station_index_dict[key]])
+    # sort_list.sort()
+    # print(sort_list)
+    # print(len(sort_list))
+    # for i in range(site_num):
+    #     for j in range(site_num):
+    #         sp_matrix[i][j]=sort_list.index(sp_matrix[i][j])
+    #     writer.writerow(sp_matrix[i])
+    # file.close()
