@@ -80,7 +80,7 @@ def data_train(file_paths, out_path,encoding='utf-8'):
 if __name__=='__main__':
     print('hello')
     # data_train(file_paths=['toll_station/in_flow.csv', 'toll_station/out_flow.csv', 'dragon_station/dragon_flow_fill.csv'], out_path='train.csv', encoding='utf-8')
-
-    print(pd.read_csv('train.csv',encoding='utf-8').values[:66])
+    # data_train(file_paths=['dragon_station/dragon_flow_fill.csv'], out_path='train_3.csv', encoding='utf-8')
+    # print(pd.read_csv('train.csv',encoding='utf-8').values[:66])
 
     print('finished')

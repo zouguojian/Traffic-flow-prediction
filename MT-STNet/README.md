@@ -77,9 +77,11 @@ tf.disable_v2_behavior()；
 | MAE            |14.322435|6.550879 |6.372804 |6.439330 |6.479654 |6.501210 |
 | RMSE           |20.525616|10.132798|9.840441 |9.963966 |10.042691|10.095425|
 | R              |0.927124 |0.968368 |0.970164 |0.969012 |0.968415 |0.968201 |
-| R<sup>2</sup>  |0.739462 |0.936499 |0.940104 |0.938585 |0.937646 |0.936981 |   
+| R<sup>2</sup>  |0.739462 |0.936499 |0.940104 |0.938585 |0.937646 |0.936981 |  
 
-### MT-STNet (Multi-steps)
+### MT-STNet (Multi-steps) 
+
+### STNet (Multi-steps)
 |评价指标         |6-1 steps|6-2 steps|6-3 steps|6-4 steps|6-5 steps|6-6 steps|
 |  ----          | ----    |  ----   |  ----   |----     |----     |----     |
 |epoch           |100      |100      |100      |100      |100      |100      |
@@ -90,11 +92,11 @@ tf.disable_v2_behavior()；
 | R              |0.976774 |0.975563 |0.976396 |0.975716 |0.975885 |0.975886 |
 | R<sup>2</sup>  |0.953795 |0.951497 |0.953141 |0.951817 |0.952119 |0.952124 | 
 
-### MT-STNet-1 (Multi-steps) dynamic step-by-step way
+### STNet-1 (Multi-steps) dynamic step-by-step way
 
-### MT-STNet-2 (Multi-steps) not consider static spatial correlation
+### STNet-2 (Multi-steps) not consider static spatial correlation
 
-### MT-STNet-3 (Multi-steps) without physical information
+### STNet-3 (Multi-steps) without physical information
 
 |评价指标         |6-1 steps|6-2 steps|6-3 steps|6-4 steps|6-5 steps|6-6 steps|
 |  ----          | ----    |  ----   |  ----   |----     |----     |----     |
