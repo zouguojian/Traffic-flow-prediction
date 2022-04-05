@@ -175,25 +175,17 @@ class Decoder_ST(object):
                                   dropout_rate=self.hp.dropout, is_training=self.hp.is_training)
         encoder_out = tf.reshape(encoder_out,
                                  shape=[self.hp.batch_size, self.hp.site_num, self.hp.output_length, self.hp.emb_size])
-        # if self.hp.model_name=='MT_STNet':
-        #     results_1 = tf.layers.dense(inputs=encoder_out[:, 0:13, :, :], units=64, name='task_1')
-        #     results_1 = tf.layers.dense(inputs=results_1, units=1, name='task_1_1')
-        #     results_2 = tf.layers.dense(inputs=encoder_out[:, 13: 26, :, :], units=64, name='task_2')
-        #     results_2 = tf.layers.dense(inputs=results_2, units=1, name='task_2_1')
-        #     results_3 = tf.layers.dense(inputs=encoder_out[:, 26:, :, :], units=64, name='task_3')
-        #     results_3 = tf.layers.dense(inputs=results_3, units=1, name='task_3_1')
-        #     results = tf.concat([results_1, results_2, results_3], axis=1)
-        #     results = tf.squeeze(results, axis=-1, name='output_y')
-        # else:
-        #     results = tf.layers.dense(inputs=encoder_out, units=128, name='layer_1', reuse=tf.AUTO_REUSE)
-        #     results = tf.layers.dense(inputs=results, units=1, name='layer_2', reuse=tf.AUTO_REUSE)
-        #     results = tf.squeeze(results, axis=-1, name='output_y')
-        results_1 = tf.layers.dense(inputs=encoder_out[:, 0:13, :, :], units=64, name='task_1')
-        results_1 = tf.layers.dense(inputs=results_1, units=1, name='task_1_1')
-        results_2 = tf.layers.dense(inputs=encoder_out[:, 13: 26, :, :], units=64, name='task_2')
-        results_2 = tf.layers.dense(inputs=results_2, units=1, name='task_2_1')
-        results_3 = tf.layers.dense(inputs=encoder_out[:, 26:, :, :], units=64, name='task_3')
-        results_3 = tf.layers.dense(inputs=results_3, units=1, name='task_3_1')
-        results = tf.concat([results_1, results_2, results_3], axis=1)
-        results = tf.squeeze(results, axis=-1, name='output_y')
+        if self.hp.model_name=='MT_STNet':
+            results_1 = tf.layers.dense(inputs=encoder_out[:, 0:13, :, :], units=64, name='task_1')
+            results_1 = tf.layers.dense(inputs=results_1, units=1, name='task_1_1')
+            results_2 = tf.layers.dense(inputs=encoder_out[:, 13: 26, :, :], units=64, name='task_2')
+            results_2 = tf.layers.dense(inputs=results_2, units=1, name='task_2_1')
+            results_3 = tf.layers.dense(inputs=encoder_out[:, 26:, :, :], units=64, name='task_3')
+            results_3 = tf.layers.dense(inputs=results_3, units=1, name='task_3_1')
+            results = tf.concat([results_1, results_2, results_3], axis=1)
+            results = tf.squeeze(results, axis=-1, name='output_y')
+        else:
+            results = tf.layers.dense(inputs=encoder_out, units=128, name='layer_1', reuse=tf.AUTO_REUSE)
+            results = tf.layers.dense(inputs=results, units=1, name='layer_2', reuse=tf.AUTO_REUSE)
+            results = tf.squeeze(results, axis=-1, name='output_y')
         return results

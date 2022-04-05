@@ -311,13 +311,13 @@ class Model(object):
             feed_dict.update({self.placeholders['dropout']: 0.0})
 
             pre = self.sess.run((self.pre), feed_dict=feed_dict)
-            label_list.append(label[:,:,:6])
-            predict_list.append(pre[:,:,:6])
+            label_list.append(label[:,:,:1])
+            predict_list.append(pre[:,:,:1])
 
         label_list = np.reshape(np.array(label_list, dtype=np.float32),
-                                [-1, self.hp.site_num, 6]).transpose([1, 0, 2])
+                                [-1, self.hp.site_num, 1]).transpose([1, 0, 2])
         predict_list = np.reshape(np.array(predict_list, dtype=np.float32),
-                                  [-1, self.hp.site_num, 6]).transpose([1, 0, 2])
+                                  [-1, self.hp.site_num, 1]).transpose([1, 0, 2])
         if self.hp.normalize:
             label_list = np.array(
                 [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in label_list])
