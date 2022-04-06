@@ -26,7 +26,7 @@ class HA():
         self.dictionary_label = []
         self.dictionary_predict = []
 
-        for site in range(self.para.site_num):
+        for site in range(26,66):
             data1=self.data[(self.data['station']==self.data.values[site][0])]
             for h in range(24):
                 data2 = data1.loc[data1['hour'] == h]

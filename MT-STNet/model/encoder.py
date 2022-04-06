@@ -79,17 +79,18 @@ class Encoder_ST(object):
         #                     tf.reshape(hour,[-1,self.hp.site_num, self.hp.emb_size]),
         #                     tf.reshape(minute,[-1,self.hp.site_num, self.hp.emb_size]),
         #                     tf.reshape(position,[-1,self.hp.site_num, self.hp.emb_size])])
+        if self.hp.model_name != 'STNet_2':
+            features = tf.concat(tf.split(features, self.hp.num_heads, axis=2), axis=0)
+            encoder_gcn = self.model_func(placeholders=self.placeholders,
+                                          input_dim=self.hp.emb_size // self.hp.num_heads,
+                                          para=self.hp,
+                                          supports=supports)
+            encoder_gcn_out = encoder_gcn.predict(features)
+            encoder_gcn_out = tf.concat(tf.split(encoder_gcn_out, self.hp.num_heads, axis=0), axis=2)
 
-        features = tf.concat(tf.split(features, self.hp.num_heads, axis=2), axis=0)
-        encoder_gcn = self.model_func(placeholders=self.placeholders,
-                                      input_dim=self.hp.emb_size // self.hp.num_heads,
-                                      para=self.hp,
-                                      supports=supports)
-        encoder_gcn_out = encoder_gcn.predict(features)
-        encoder_gcn_out = tf.concat(tf.split(encoder_gcn_out, self.hp.num_heads, axis=0), axis=2)
-
-        encoder_out = tf.concat([x, encoder_gcn_out], axis=-1)
-        encoder_out = tf.layers.dense(encoder_out, units=self.hp.emb_size, activation=tf.nn.tanh, name='concate')
+            encoder_out = tf.concat([x, encoder_gcn_out], axis=-1)
+            encoder_out = tf.layers.dense(encoder_out, units=self.hp.emb_size, activation=tf.nn.tanh, name='concate')
+        else:encoder_out = x
         # encoder_out=self.gate_fusion(states=x,inputs=encoder_gcn_out,hidden_size=self.hp.emb_size)
 
         # w_1 = tf.Variable(tf.truncated_normal(shape=[self.hp.emb_size,self.hp.emb_size]), name='w_1')

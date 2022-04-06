@@ -44,7 +44,8 @@ class Decoder_ST(object):
         c = tf.multiply(f, states) + tf.multiply(i, c_t)
         return c
 
-    def decoder_spatio_temporal(self, features=None, day=None, hour=None, minute=None, position=None, supports=None, sp=None, dis=None,in_deg=None,out_deg=None):
+    def decoder_spatio_temporal(self, features=None, day=None, hour=None, minute=None, position=None, supports=None,
+                                in_length=6, sp=None, dis=None,in_deg=None,out_deg=None):
         '''
         :param flow:
         :param day:
@@ -53,21 +54,21 @@ class Decoder_ST(object):
         :return:
         '''
         pres = list()
-        '''
-        decoder_gcn = self.model_func(self.placeholders,
-                                      input_dim=self.hp.emb_size,
+
+        decoder_gcn = self.model_func(placeholders=self.placeholders,
+                                      input_dim=self.hp.emb_size // self.hp.num_heads,
                                       para=self.hp,
                                       supports=supports)
-        '''
         m = Transformer(self.hp)
         features = tf.reshape(tf.transpose(features, perm=[0, 2, 1, 3]),
-                              shape=[-1, self.hp.input_length, self.hp.emb_size])  # 3-D
+                              shape=[-1, self.hp.input_length, self.hp.emb_size])
         for i in range(self.hp.output_length):
             o_day = day[:, i:i + 1, :, :]
             o_hour = hour[:, i:i + 1, :, :]
             o_minute = minute[:, i:i + 1, :, :]
+            o_position = position[:, i:i + 1, :, :]
 
-            pre_features = tf.add_n([o_day, o_hour, o_minute])
+            pre_features = tf.add_n([o_hour, o_minute])
             pre_features = tf.reshape(tf.transpose(pre_features, perm=[0, 2, 1, 3]),
                                       shape=[-1, 1, self.hp.emb_size])  # 3-D
 
@@ -81,17 +82,35 @@ class Decoder_ST(object):
                                      dropout_rate=self.hp.dropout,
                                      is_training=self.hp.is_training)  # temporal attention, shape is [-1, length, hidden_size]
             # ,num_heads=self.hp.num_heads,num_blocks=self.hp.num_blocks
-            features = tf.concat([features, t_features], axis=1)
+            # features = tf.concat([features, t_features], axis=1)
 
-            # x = m.encoder(inputs=t_features,
-            #               input_length=1,
-            #               day=o_day,
-            #               hour=o_hour,
-            #               minute=o_minute,
-            #               position=position)  # spatial attention
-            x = tf.squeeze(t_features)
+            t_features = tf.reshape(t_features, shape=[-1, self.hp.site_num, 1, self.hp.emb_size])
+            t_features = tf.transpose(t_features, perm=[0, 2, 1, 3])
+            t_features = tf.reshape(t_features, shape=[-1, self.hp.site_num, self.hp.emb_size])
+            with tf.variable_scope("spatial",reuse=tf.AUTO_REUSE):
+                x = m.encoder(inputs=t_features,
+                              input_length=1,
+                              day=o_day,
+                              hour=o_hour,
+                              minute=o_minute,
+                              position=o_position,
+                              sp=sp,
+                              dis=dis,
+                              in_deg=in_deg,
+                              out_deg=out_deg)  # spatial attention
+
+            decoder_gcn_in = tf.concat(tf.split(t_features, self.hp.num_heads, axis=2), axis=0)
+            decoder_gcn_out = decoder_gcn.predict(decoder_gcn_in)
+            decoder_gcn_out = tf.concat(tf.split(decoder_gcn_out, self.hp.num_heads, axis=0), axis=2)
+
+            decoder_out = tf.concat([x, decoder_gcn_out], axis=-1)
+            decoder_out = tf.layers.dense(decoder_out, units=self.hp.emb_size, activation=tf.nn.tanh, name='concate',reuse=tf.AUTO_REUSE)
+
+            x = tf.squeeze(decoder_out)
             x = tf.reshape(x, shape=[-1, self.hp.site_num, self.hp.emb_size])
-            results = tf.layers.dense(inputs=x, units=1, name='layer', reuse=tf.AUTO_REUSE)
+            results = tf.layers.dense(inputs=x, units=128, name='layer_1', reuse=tf.AUTO_REUSE)
+            results = tf.layers.dense(inputs=results, units=1, name='layer_2', reuse=tf.AUTO_REUSE)
+            # results = tf.layers.dense(inputs=x, units=1, name='layer', reuse=tf.AUTO_REUSE)
             pre = tf.reshape(results, shape=[-1, self.hp.site_num])
 
             # to store the prediction results for road nodes on each time
@@ -137,16 +156,18 @@ class Decoder_ST(object):
                       in_deg=in_deg,
                       out_deg=out_deg)  # spatial attention
 
-        features = tf.concat(tf.split(features, self.hp.num_heads, axis=2), axis=0)
-        encoder_gcn = self.model_func(placeholders=self.placeholders,
-                                      input_dim=self.hp.emb_size // self.hp.num_heads,
-                                      para=self.hp,
-                                      supports=supports)
-        encoder_gcn_out = encoder_gcn.predict(features)
-        encoder_gcn_out = tf.concat(tf.split(encoder_gcn_out, self.hp.num_heads, axis=0), axis=2)
+        if self.hp.model_name != 'STNet_2':
+            features = tf.concat(tf.split(features, self.hp.num_heads, axis=2), axis=0)
+            decoder_gcn = self.model_func(placeholders=self.placeholders,
+                                          input_dim=self.hp.emb_size // self.hp.num_heads,
+                                          para=self.hp,
+                                          supports=supports)
+            decoder_gcn_out = decoder_gcn.predict(features)
+            decoder_gcn_out = tf.concat(tf.split(decoder_gcn_out, self.hp.num_heads, axis=0), axis=2)
 
-        encoder_out = tf.concat([x, encoder_gcn_out], axis=-1)
-        encoder_out = tf.layers.dense(encoder_out, units=self.hp.emb_size, activation=tf.nn.tanh, name='concate')
+            decoder_out = tf.concat([x, decoder_gcn_out], axis=-1)
+            decoder_out = tf.layers.dense(decoder_out, units=self.hp.emb_size, activation=tf.nn.tanh, name='concate')
+        else:decoder_out = x
         # encoder_out=self.gate_fusion(states=x,inputs=encoder_gcn_out,hidden_size=self.hp.emb_size)
 
         # bias = tf.Variable(tf.truncated_normal(shape=[self.hp.emb_size]), name='bias')
@@ -162,30 +183,30 @@ class Decoder_ST(object):
         # encoder_out = tf.concat([x,encoder_gcn_out],axis=-1)
         # encoder_out=pre_features
 
-        encoder_out = tf.reshape(encoder_out,
+        decoder_out = tf.reshape(decoder_out,
                                  shape=[self.hp.batch_size, self.hp.output_length, self.hp.site_num, self.hp.emb_size])
-        encoder_out = tf.transpose(encoder_out, [0, 2, 1, 3])
-        encoder_out = tf.reshape(encoder_out, shape=[-1, self.hp.output_length, self.hp.emb_size])
+        decoder_out = tf.transpose(decoder_out, [0, 2, 1, 3])
+        decoder_out = tf.reshape(decoder_out, shape=[-1, self.hp.output_length, self.hp.emb_size])
 
         # 输入和输出合并
-        in_features = tf.concat([in_features, encoder_out], axis=1)
+        in_features = tf.concat([in_features, decoder_out], axis=1)
 
         # with tf.variable_scope("temporal_attention_2"):
-        encoder_out = t_attention(hiddens=in_features, hidden=encoder_out, hidden_units=self.hp.emb_size,
+        decoder_out = t_attention(hiddens=in_features, hidden=decoder_out, hidden_units=self.hp.emb_size,
                                   dropout_rate=self.hp.dropout, is_training=self.hp.is_training)
-        encoder_out = tf.reshape(encoder_out,
+        decoder_out = tf.reshape(decoder_out,
                                  shape=[self.hp.batch_size, self.hp.site_num, self.hp.output_length, self.hp.emb_size])
         if self.hp.model_name=='MT_STNet':
-            results_1 = tf.layers.dense(inputs=encoder_out[:, 0:13, :, :], units=64, name='task_1')
+            results_1 = tf.layers.dense(inputs=decoder_out[:, 0:13, :, :], units=64, name='task_1')
             results_1 = tf.layers.dense(inputs=results_1, units=1, name='task_1_1')
-            results_2 = tf.layers.dense(inputs=encoder_out[:, 13: 26, :, :], units=64, name='task_2')
+            results_2 = tf.layers.dense(inputs=decoder_out[:, 13: 26, :, :], units=64, name='task_2')
             results_2 = tf.layers.dense(inputs=results_2, units=1, name='task_2_1')
-            results_3 = tf.layers.dense(inputs=encoder_out[:, 26:, :, :], units=64, name='task_3')
+            results_3 = tf.layers.dense(inputs=decoder_out[:, 26:, :, :], units=64, name='task_3')
             results_3 = tf.layers.dense(inputs=results_3, units=1, name='task_3_1')
             results = tf.concat([results_1, results_2, results_3], axis=1)
             results = tf.squeeze(results, axis=-1, name='output_y')
         else:
-            results = tf.layers.dense(inputs=encoder_out, units=128, name='layer_1', reuse=tf.AUTO_REUSE)
+            results = tf.layers.dense(inputs=decoder_out, units=128, name='layer_1', reuse=tf.AUTO_REUSE)
             results = tf.layers.dense(inputs=results, units=1, name='layer_2', reuse=tf.AUTO_REUSE)
             results = tf.squeeze(results, axis=-1, name='output_y')
         return results

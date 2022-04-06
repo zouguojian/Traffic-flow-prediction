@@ -83,7 +83,7 @@ class DataClass(object):
             if self.is_training:
                 low += self.step
             else:
-                low += 1
+                low += self.hp.predict_length
                 # low += self.output_length
 
     def next_batch(self, batch_size, epoch, is_training=True):

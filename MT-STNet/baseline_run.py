@@ -308,6 +308,9 @@ class Model(object):
         label_list = list()
         predict_list = list()
 
+        label_list1, label_list2, label_list3 = list(), list(), list()
+        predict_list1, predict_list2, predict_list3 = list(), list(), list()
+
         # with tf.Session() as sess:
         model_file = tf.train.latest_checkpoint(self.hp.save_path)
         if not self.hp.is_training:
@@ -335,24 +338,73 @@ class Model(object):
             feed_dict.update({self.placeholders['dropout']: 0.0})
 
             pre = self.sess.run((self.pre), feed_dict=feed_dict)
-            label_list.append(label[:,:,:6])
-            predict_list.append(pre[:,:,:6])
+            label_list.append(label[:,:,:self.hp.predict_length])
+            predict_list.append(pre[:,:,:self.hp.predict_length])
+
+            label_list1.append(label[:,:13,:self.hp.predict_length])
+            label_list2.append(label[:, 13:26, :self.hp.predict_length])
+            label_list3.append(label[:, 26:, :self.hp.predict_length])
+            predict_list1.append(pre[:, :13, :self.hp.predict_length])
+            predict_list2.append(pre[:, 13:26, :self.hp.predict_length])
+            predict_list3.append(pre[:, 26:, :self.hp.predict_length])
 
         label_list = np.reshape(np.array(label_list, dtype=np.float32),
-                                [-1, self.hp.site_num, 6]).transpose([1, 0, 2])
+                                [-1, self.hp.site_num, self.hp.predict_length]).transpose([1, 0, 2])
         predict_list = np.reshape(np.array(predict_list, dtype=np.float32),
-                                  [-1, self.hp.site_num, 6]).transpose([1, 0, 2])
+                                  [-1, self.hp.site_num, self.hp.predict_length]).transpose([1, 0, 2])
+
+        label_list1 = np.reshape(np.array(label_list1, dtype=np.float32),
+                                [-1, 13, self.hp.predict_length]).transpose([1, 0, 2])
+        predict_list1 = np.reshape(np.array(predict_list1, dtype=np.float32),
+                                  [-1, 13, self.hp.predict_length]).transpose([1, 0, 2])
+        label_list2 = np.reshape(np.array(label_list2, dtype=np.float32),
+                                [-1, 13, self.hp.predict_length]).transpose([1, 0, 2])
+        predict_list2 = np.reshape(np.array(predict_list2, dtype=np.float32),
+                                  [-1, 13, self.hp.predict_length]).transpose([1, 0, 2])
+        label_list3 = np.reshape(np.array(label_list3, dtype=np.float32),
+                                [-1, 40, self.hp.predict_length]).transpose([1, 0, 2])
+        predict_list3 = np.reshape(np.array(predict_list3, dtype=np.float32),
+                                  [-1, 40, self.hp.predict_length]).transpose([1, 0, 2])
+
         if self.hp.normalize:
             label_list = np.array(
                 [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in label_list])
             predict_list = np.array(
                 [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in predict_list])
+
+            label_list1 = np.array(
+                [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in label_list1])
+            predict_list1 = np.array(
+                [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in predict_list1])
+            label_list2 = np.array(
+                [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in label_list2])
+            predict_list2 = np.array(
+                [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in predict_list2])
+            label_list3 = np.array(
+                [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in label_list3])
+            predict_list3 = np.array(
+                [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in predict_list3])
         else:
             label_list = np.array([np.reshape(site_label, [-1]) for site_label in label_list])
             predict_list = np.array([np.reshape(site_label, [-1]) for site_label in predict_list])
 
         label_list = np.reshape(label_list, [-1])
         predict_list = np.reshape(predict_list, [-1])
+
+        label_list1 = np.reshape(label_list1, [-1])
+        predict_list1 = np.reshape(predict_list1, [-1])
+        label_list2 = np.reshape(label_list2, [-1])
+        predict_list2 = np.reshape(predict_list2, [-1])
+        label_list3 = np.reshape(label_list3, [-1])
+        predict_list3 = np.reshape(predict_list3, [-1])
+
+        print('1')
+        metric(predict_list1, label_list1)
+        print('2')
+        metric(predict_list2, label_list2)
+        print('3')
+        metric(predict_list3, label_list3)
+        print('4')
         mae, rmse, mape, cor, r2=metric(predict_list,label_list)
         # self.describe(label_list, predict_list)   #预测值可视化
         return mae
