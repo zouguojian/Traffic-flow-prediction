@@ -144,17 +144,18 @@ class Decoder_ST(object):
         x = tf.transpose(x, perm=[0, 2, 1, 3])
         features = tf.reshape(x, shape=[-1, self.hp.site_num, self.hp.emb_size])
 
-        m = Transformer(self.hp)
-        x = m.encoder(inputs=features,
-                      input_length=self.hp.output_length,
-                      day=day,
-                      hour=hour,
-                      minute=minute,
-                      position=position,
-                      sp=sp,
-                      dis=dis,
-                      in_deg=in_deg,
-                      out_deg=out_deg)  # spatial attention
+        if self.hp.model_name != 'STNet_4':
+            m = Transformer(self.hp)
+            x = m.encoder(inputs=features,
+                          input_length=self.hp.output_length,
+                          day=day,
+                          hour=hour,
+                          minute=minute,
+                          position=position,
+                          sp=sp,
+                          dis=dis,
+                          in_deg=in_deg,
+                          out_deg=out_deg)  # spatial attention
 
         if self.hp.model_name != 'STNet_2':
             features = tf.concat(tf.split(features, self.hp.num_heads, axis=2), axis=0)
@@ -164,8 +165,9 @@ class Decoder_ST(object):
                                           supports=supports)
             decoder_gcn_out = decoder_gcn.predict(features)
             decoder_gcn_out = tf.concat(tf.split(decoder_gcn_out, self.hp.num_heads, axis=0), axis=2)
-
-            decoder_out = tf.concat([x, decoder_gcn_out], axis=-1)
+            if self.hp.model_name != 'STNet_4':
+                decoder_out = tf.concat([x, decoder_gcn_out], axis=-1)
+            else:decoder_out = decoder_gcn_out
             decoder_out = tf.layers.dense(decoder_out, units=self.hp.emb_size, activation=tf.nn.tanh, name='concate')
         else:decoder_out = x
         # encoder_out=self.gate_fusion(states=x,inputs=encoder_gcn_out,hidden_size=self.hp.emb_size)

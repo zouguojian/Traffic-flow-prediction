@@ -160,7 +160,7 @@ def multihead_attention(key_emb,
         # Scale
         outputs = outputs / (K_.get_shape().as_list()[-1] ** 0.5)
 
-        if arg.model_name != 'STNet_3' or arg.model_name != 'STNet_4':
+        if arg.model_name != 'STNet_3' and arg.model_name != 'STNet_4':
             dis = tf.expand_dims(tf.squeeze(dis),axis=0)
             outputs = tf.add(outputs,dis) # physical information
 
@@ -323,7 +323,7 @@ class Transformer():
             position = tf.reshape(position, shape=[self.batch * input_length, self.site_num, self.hidden_units])
             # trick
             self.en_emb = tf.add_n([self.en_emb, hour, minute]) # physical information
-            if self.arg.model_name != 'STNet_3' or self.arg.model_name != 'STNet_4':
+            if self.arg.model_name != 'STNet_3' and self.arg.model_name != 'STNet_4':
                 deg_emb = tf.add(in_deg,out_deg)
                 self.en_emb = tf.add(self.en_emb,deg_emb)
             # self.en_emb=tf.layers.dense(tf.concat([self.en_emb,day,hour],axis=-1),units=self.hidden_units,name='add_speed_emb')

@@ -68,7 +68,35 @@ if __name__ == "__main__":
     for k in range(6):
         labels = []
         predicts = []
-        for site in range(66):
+        for site in range(0, 13):
+            print(site)
+            series=data.loc[data['station'] == site]
+
+            label, predict=evaluate_models(series.values[:,-1], p_values=6, d_values=0, q_values=1,k=k)
+            labels.append(label)
+            predicts.append(predict)
+
+        labels=np.reshape(np.array(labels),newshape=[-1])
+        predicts=np.reshape(np.array(predicts),newshape=[-1])
+        metric(pred=predicts,label=labels)
+
+        labels = []
+        predicts = []
+        for site in range(13, 26):
+            print(site)
+            series=data.loc[data['station'] == site]
+
+            label, predict=evaluate_models(series.values[:,-1], p_values=6, d_values=0, q_values=1,k=k)
+            labels.append(label)
+            predicts.append(predict)
+
+        labels=np.reshape(np.array(labels),newshape=[-1])
+        predicts=np.reshape(np.array(predicts),newshape=[-1])
+        metric(pred=predicts,label=labels)
+
+        labels = []
+        predicts = []
+        for site in range(26, 66):
             print(site)
             series=data.loc[data['station'] == site]
 

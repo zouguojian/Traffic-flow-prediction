@@ -92,13 +92,23 @@ def res(model, testX, testTE, testY, mean, std):
     pred = np.concatenate(pred, axis=0)
     label = np.concatenate(label, axis=0)
 
-    # print(pred.shape, label.shape)
+    print(pred.shape, label.shape)
     maes = []
     rmses = []
     mapes = []
     wapes = []
     cors = []
     r2s = []
+
+    # k=6
+    # print('1')
+    # metric(pred[:, :k, :13], label[:, :k, :13])
+    # print('2')
+    # metric(pred[:, :k, 13:26], label[:, :k, 13:26])
+    # print('3')
+    # metric(pred[:, :k, 26:], label[:, :k, 26:])
+    # print('4')
+    # metric(pred[:, :k, :], label[:, :k, :])
 
     for i in range(6):
         mae, rmse, mape, cor, r2 = metric(pred[:, :i+1, :], label[:, :i+1, :])
@@ -226,6 +236,11 @@ def metric(pred, label):
         sse = np.sum((label - pred) ** 2)
         sst = np.sum((label - np.mean(label)) ** 2)
         r2 = 1 - sse / sst  # r2_score(y_actual, y_predicted, multioutput='raw_values')
+        print('mae is : %.6f'%mae)
+        print('rmse is : %.6f'%rmse)
+        print('mape is : %.6f'%mape)
+        print('r is : %.6f'%cor)
+        print('r$^2$ is : %.6f'%r2)
     return mae, rmse, mape, cor, r2
 
 

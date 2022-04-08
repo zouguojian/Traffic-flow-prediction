@@ -189,7 +189,7 @@ class Model(object):
             out_position = self.p_emd[:, self.hp.input_length:, :, :]
 
             decoder = Decoder_ST(hp=self.hp, placeholders=self.placeholders, model_func=self.model_func)
-            self.pre=decoder.decoder_spatio_temporal(features=encoder_out,
+            self.pre=decoder.decoder_spatio_temporal_1(features=encoder_out,
                                                        day=out_day,
                                                        hour=out_hour,
                                                        minute=out_minute,
