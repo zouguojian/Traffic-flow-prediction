@@ -244,7 +244,7 @@ def metric(pred, label):
         # mae = np.nan_to_num(mae * mask)
         # wape = np.divide(np.sum(mae), np.sum(label))
         mae = np.mean(mae)
-        # rmse = np.nan_to_num(rmse * mask)
+        rmse = np.nan_to_num(rmse * mask)
         rmse = np.sqrt(np.mean(rmse))
         mape = np.nan_to_num(mape * mask)
         mape = np.mean(mape)

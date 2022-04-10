@@ -67,7 +67,6 @@ class GraphConvolution():
 
         # helper variable for sparse dropout
         self.num_features_nonzero = placeholders['num_features_nonzero']
-
         self.name = self.__class__.__name__.lower()
         with tf.variable_scope(self.name + '_vars'):
             for i in range(len(self.support)):
