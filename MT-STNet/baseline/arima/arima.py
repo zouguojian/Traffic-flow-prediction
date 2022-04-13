@@ -4,6 +4,8 @@ import numpy as np
 from statsmodels.tsa.arima_model import ARIMA
 from sklearn.metrics import mean_squared_error
 
+import warnings
+
 def metric(pred, label):
     with np.errstate(divide='ignore', invalid='ignore'):
         mask = np.not_equal(label, 0)
@@ -34,13 +36,13 @@ def metric(pred, label):
 # evaluate an ARIMA model for a given order (p,d,q)
 def evaluate_arima_model(X, arima_order,k):
     # prepare training dataset
-    train_size = int(len(X) * 0.8)
-    train, test = X[int(len(X) * 0.6):train_size], X[train_size:]
+    train_size = int(len(X) * 0.65)
+    train, test = X[int(len(X) * 0.6):train_size], X[-100:]
     history = [x for x in train]
     # make predictions
     prediction = list()
     for t in range(len(test)):
-        # print('t is : ',t)
+        print('t is : ',t)
         model = ARIMA(history, order=arima_order)
         model_fit = model.fit(disp=0)
         yhat = model_fit.forecast(steps=k+1)[0]
@@ -64,6 +66,8 @@ if __name__ == "__main__":
     # p_values = [1, 2, 4, 6]
     # d_values = range(0, 3)
     # q_values = range(0, 3)
+
+    warnings.filterwarnings("ignore")
 
     for k in range(6):
         labels = []

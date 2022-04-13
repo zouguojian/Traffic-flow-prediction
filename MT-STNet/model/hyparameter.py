@@ -5,8 +5,8 @@ class parameter(object):
     def __init__(self,parser):
         self.parser=parser
 
-        self.parser.add_argument('--save_path', type=str, default='weights/STNet_3/', help='save path')
-        self.parser.add_argument('--model_name', type=str, default='STNet_3', help='training or testing model name')
+        self.parser.add_argument('--save_path', type=str, default='weights/STNet/', help='save path')
+        self.parser.add_argument('--model_name', type=str, default='STNet', help='training or testing model name')
 
         self.parser.add_argument('--divide_ratio', type=float, default=0.8, help='data_divide')
         self.parser.add_argument('--is_training', type=bool, default=True, help='is training')
