@@ -26,7 +26,7 @@ class parameter(object):
         self.parser.add_argument('--normalize', type=bool, default=True, help='normalize')
         self.parser.add_argument('--input_length', type=int, default=6, help='input length')
         self.parser.add_argument('--output_length', type=int, default=6, help='output length')
-        self.parser.add_argument('--predict_length', type=int, default=1, help='predict length')
+        self.parser.add_argument('--predict_length', type=int, default=6, help='predict length')
 
         self.parser.add_argument('--hidden1', type=int, default=32, help='number of units in hidden layer 1')
         self.parser.add_argument('--gcn_output_size', type=int, default=64, help='model string')

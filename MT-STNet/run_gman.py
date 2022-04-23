@@ -30,6 +30,8 @@ import matplotlib.pyplot as plt
 import model.data_next as data_load
 import os
 import argparse
+import csv
+import datetime
 
 tf.reset_default_graph()
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
@@ -261,11 +263,19 @@ class Model(object):
         max, min = iterate_test.max_dict['flow'], iterate_test.min_dict['flow']
         print(max, min)
 
+        # file = open('results/gman.csv', 'w', encoding='utf-8')
+        # writer = csv.writer(file)
+        # writer.writerow(['station']+['day_'+str(i) for i in range(self.hp.predict_length)]+['hour_'+str(i) for i in range(self.hp.predict_length)]+
+        #                 ['minute_' + str(i) for i in range(self.hp.predict_length)]+['label_'+str(i) for i in range(self.hp.predict_length)]+
+        #                 ['predict_' + str(i) for i in range(self.hp.predict_length)])
+
         # '''
+
         for i in range(int((iterate_test.length // self.hp.site_num
                             - iterate_test.length // self.hp.site_num * iterate_test.divide_ratio
                             - (iterate_test.input_length + iterate_test.output_length)) // iterate_test.output_length)
                        // self.hp.batch_size):
+            # start_time = datetime.datetime.now()
             x, day, hour, minute, label = self.sess.run(test_next)
             features = np.reshape(x, [-1, self.hp.site_num, self.hp.features])
             day = np.reshape(day, [-1, self.hp.site_num])
@@ -280,12 +290,22 @@ class Model(object):
             label_list.append(label[:,:,:self.hp.predict_length])
             predict_list.append(pre[:,:,:self.hp.predict_length])
 
+            # for site in range(self.hp.site_num):
+            #     writer.writerow([station[0][site]]+list(day[self.hp.input_length:,0])+
+            #                      list(hour[self.hp.input_length:,0])+
+            #                      list(minute[self.hp.input_length:,0]*5)+
+            #                      list(np.round(self.re_current(label[0][site],max,min)))+
+            #                      list(np.round(self.re_current(pre[0][site],max,min))))
+
             label_list1.append(label[:,:13,:self.hp.predict_length])
             label_list2.append(label[:, 13:26, :self.hp.predict_length])
             label_list3.append(label[:, 26:, :self.hp.predict_length])
             predict_list1.append(pre[:, :13, :self.hp.predict_length])
             predict_list2.append(pre[:, 13:26, :self.hp.predict_length])
             predict_list3.append(pre[:, 26:, :self.hp.predict_length])
+            # end_time = datetime.datetime.now()
+            # total_time = end_time - start_time
+            # print("Total running times is : %f" % total_time.total_seconds())
 
         label_list = np.reshape(np.array(label_list, dtype=np.float32),
                                 [-1, self.hp.site_num, self.hp.predict_length]).transpose([1, 0, 2])

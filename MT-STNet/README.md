@@ -13,7 +13,7 @@ tf.disable_v2_behavior()；
 > * 需要注意的是，我们在tensorflow的1.12和1.14版本环境中都可以运行
 ---
 
-## 模型实验结果
+## Experimental Results
 ### HA (Multi-steps)
 |评价指标         |6-1 steps|6-2 steps|6-3 steps|6-4 steps|6-5 steps|6-6 steps|
 |  ----          | ----    |  ----   |  ----   |----     |----     |----     |
@@ -46,6 +46,7 @@ tf.disable_v2_behavior()；
 | MAPE           |0.423491 |0.423491 |0.423491 |0.423491 |0.423491 |0.423491 |
 | R              |0.936455 |0.936455 |0.936455 |0.936455 |0.936455 |0.936455 |
 | R<sup>2</sup>  |0.865742 |0.865742 |0.865742 |0.865742 |0.865742 |0.865742 | 
+---
 ### ARIMA (Multi-steps)
 #### ARIMA (train set 1)
 |评价指标         |6-1 steps|6-3 steps|6-6 steps|
@@ -65,7 +66,7 @@ tf.disable_v2_behavior()；
 | MAE            |6.6067   |9.5391	 |22.00%   |		
 | RMSE           |6.9719   |10.0852	 |22.67%   |
 | MAPE           |7.5361   |10.9894	 |24.01%   |
-
+---
 ### LSTM (Multi-steps)
 |评价指标         |6-1 steps|6-2 steps|6-3 steps|6-4 steps|6-5 steps|6-6 steps|
 |  ----          | ----    |  ----   |  ----   |----     |----     |----     |
