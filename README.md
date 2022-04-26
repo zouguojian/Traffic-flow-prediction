@@ -14,7 +14,7 @@ tf.disable_v2_behavior()；
 > * 需要注意的是，我们在tensorflow的1.12和1.14版本环境中都可以运行
 ---
 
-## Hyperparameters for MT-STNet
+## Hyperparameters for MT-STNet and Baselines
 
 > self.parser.add_argument('--save_path', type=str, default='weights/STNet/', help='save path')  
 > self.parser.add_argument('--model_name', type=str, default='STNet', help='training or testing model name')  
