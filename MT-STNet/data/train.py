@@ -84,3 +84,14 @@ if __name__=='__main__':
     # print(pd.read_csv('train.csv',encoding='utf-8').values[:66])
 
     print('finished')
+
+    # data=pd.read_csv('train.csv',encoding='utf-8').values
+    #
+    # file = open('train_1.csv', 'w', encoding='utf-8')
+    # writer = csv.writer(file)
+    # writer.writerow(['station','date','day','hour','minute','flow'])
+    #
+    # for line in data[-7*24*12*66:,]:
+    #     writer.writerow(line)
+    #
+    # file.close()
