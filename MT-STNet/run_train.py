@@ -340,9 +340,9 @@ class Model(object):
             predict_list2.append(pre[:, 13:26, :self.hp.predict_length])
             predict_list3.append(pre[:, 26:, :self.hp.predict_length])
 
-            end_time = datetime.datetime.now()
-            total_time = end_time - start_time
-            print("Total running times is : %f" % total_time.total_seconds())
+            # end_time = datetime.datetime.now()
+            # total_time = end_time - start_time
+            # print("Total running times is : %f" % total_time.total_seconds())
         # file.close()
 
         label_list = np.reshape(np.array(label_list, dtype=np.float32),

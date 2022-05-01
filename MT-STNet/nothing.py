@@ -15,47 +15,52 @@ import pandas as pd
 import numpy as np
 from matplotlib.ticker import MaxNLocator
 
-# gman_mae_1=[3.428062 ,3.362646 ,3.390813 ,3.494071 ,3.531799 ,3.571153 ]
-# mtstnet_mae_1 =[3.337196 ,3.262034 ,3.309998 ,3.393569 ,3.452100 ,3.490424]
-# stnet_mae_1 =[3.397154 ,3.315932 ,3.352641 ,3.436237 ,3.487889 ,3.522225]
-# stnet_1_mae_1 =[3.611186 ,3.527211 ,3.554060 ,3.636007 ,3.688783 ,3.713170]
-# stnet_2_mae_1 =[3.389414 ,3.331613 ,3.374541 ,3.468928 ,3.520837 ,3.547431]
-# stnet_3_mae_1 =[3.397154 ,3.394028 ,3.414805 ,3.505591 ,3.555709 ,3.588656]
-# stnet_4_mae_1 =[3.594652 ,3.557736 ,3.597997 ,3.693960 ,3.759612 ,3.834248]
-#
-# gman_mae_2=[3.210767 ,3.202774 ,3.227582 ,3.326689 ,3.390800 ,3.401304]
-# mtstnet_mae_2 =[3.134595 ,3.120462 ,3.155602 ,3.261914 ,3.335388 ,3.352315]
-# stnet_mae_2 =[3.238022 ,3.216114 ,3.213459 ,3.311007 ,3.368181 ,3.386188]
-# stnet_1_mae_2 =[3.395396 ,3.388695 ,3.402937 ,3.496401 ,3.555645 ,3.556630]
-# stnet_2_mae_2 =[3.236276 ,3.230162 ,3.244592 ,3.354224 ,3.403931 ,3.412322]
-# stnet_3_mae_2 =[3.238022 ,3.257916 ,3.266579 ,3.372933 ,3.434382 ,3.455262]
-# stnet_4_mae_2 =[3.362322 ,3.392057 ,3.418516 ,3.529217 ,3.607550 ,3.637214]
-#
-# gman_mae_3=[4.958639 ,4.911810 ,4.936396 ,5.005800 ,5.099811 ,5.113480]
-# mtstnet_mae_3 =[4.898097 ,4.796436 ,4.847729 ,4.917308 ,5.015742 ,5.026833]
-# stnet_mae_3 =[5.009089 ,4.912931 ,4.939495 ,4.991030 ,5.073441 ,5.071135]
-# stnet_1_mae_3 =[5.103732 ,5.009642 ,5.047273 ,5.089467 ,5.176653 ,5.171041]
-# stnet_2_mae_3 =[4.970406 ,4.902922 ,4.935338 ,4.995029 ,5.080034 ,5.081162]
-# stnet_3_mae_3 =[5.009089 ,4.916643 ,4.946118 ,4.996597 ,5.079686 ,5.075325]
-# stnet_4_mae_3 =[5.121350 ,5.076481 ,5.121463 ,5.221449 ,5.328916 ,5.357304]
-#
-# gman_rsme_1=[5.254955 ,5.204915 ,5.229750 ,5.483340 ,5.530793 ,5.608531 ]
-# gman_rsme_2=[4.931747 ,5.076912 ,5.040418 ,5.350675 ,5.415388 ,5.388327]
-# gman_rsme_3=[7.099093 ,7.202662 ,7.175812 ,7.334400 ,7.482317 ,7.495110]
-#
-# gman_mape_1=[0.373112 ,0.375637 ,0.373050 ,0.379447 ,0.375342 ,0.375640 ]
-# gman_mape_2=[0.356836 ,0.358082 ,0.353682 ,0.354211 ,0.352952 ,0.354543]
-# gman_mape_3=[0.271792 ,0.284824 ,0.281732 ,0.283210 ,0.282705 ,0.283630]
+a=np.divide(np.array([0]),np.array([0]))
+
+rmse = np.nan_to_num(a)
+print(rmse)
+
+gman_mae_1=[3.428062 ,3.362646 ,3.390813 ,3.494071 ,3.531799 ,3.571153 ]
+mtstnet_mae_1 =[3.337196 ,3.262034 ,3.309998 ,3.393569 ,3.452100 ,3.490424]
+stnet_mae_1 =[3.397154 ,3.315932 ,3.352641 ,3.436237 ,3.487889 ,3.522225]
+stnet_1_mae_1 =[3.611186 ,3.527211 ,3.554060 ,3.636007 ,3.688783 ,3.713170]
+stnet_2_mae_1 =[3.389414 ,3.331613 ,3.374541 ,3.468928 ,3.520837 ,3.547431]
+stnet_3_mae_1 =[3.397154 ,3.394028 ,3.414805 ,3.505591 ,3.555709 ,3.588656]
+stnet_4_mae_1 =[3.594652 ,3.557736 ,3.597997 ,3.693960 ,3.759612 ,3.834248]
+
+gman_mae_2=[3.210767 ,3.202774 ,3.227582 ,3.326689 ,3.390800 ,3.401304]
+mtstnet_mae_2 =[3.134595 ,3.120462 ,3.155602 ,3.261914 ,3.335388 ,3.352315]
+stnet_mae_2 =[3.238022 ,3.216114 ,3.213459 ,3.311007 ,3.368181 ,3.386188]
+stnet_1_mae_2 =[3.395396 ,3.388695 ,3.402937 ,3.496401 ,3.555645 ,3.556630]
+stnet_2_mae_2 =[3.236276 ,3.230162 ,3.244592 ,3.354224 ,3.403931 ,3.412322]
+stnet_3_mae_2 =[3.238022 ,3.257916 ,3.266579 ,3.372933 ,3.434382 ,3.455262]
+stnet_4_mae_2 =[3.362322 ,3.392057 ,3.418516 ,3.529217 ,3.607550 ,3.637214]
+
+gman_mae_3=[4.958639 ,4.911810 ,4.936396 ,5.005800 ,5.099811 ,5.113480]
+mtstnet_mae_3 =[4.898097 ,4.796436 ,4.847729 ,4.917308 ,5.015742 ,5.026833]
+stnet_mae_3 =[5.009089 ,4.912931 ,4.939495 ,4.991030 ,5.073441 ,5.071135]
+stnet_1_mae_3 =[5.103732 ,5.009642 ,5.047273 ,5.089467 ,5.176653 ,5.171041]
+stnet_2_mae_3 =[4.970406 ,4.902922 ,4.935338 ,4.995029 ,5.080034 ,5.081162]
+stnet_3_mae_3 =[5.009089 ,4.916643 ,4.946118 ,4.996597 ,5.079686 ,5.075325]
+stnet_4_mae_3 =[5.121350 ,5.076481 ,5.121463 ,5.221449 ,5.328916 ,5.357304]
+
+gman_rsme_1=[5.254955 ,5.204915 ,5.229750 ,5.483340 ,5.530793 ,5.608531 ]
+gman_rsme_2=[4.931747 ,5.076912 ,5.040418 ,5.350675 ,5.415388 ,5.388327]
+gman_rsme_3=[7.099093 ,7.202662 ,7.175812 ,7.334400 ,7.482317 ,7.495110]
+
+gman_mape_1=[0.373112 ,0.375637 ,0.373050 ,0.379447 ,0.375342 ,0.375640 ]
+gman_mape_2=[0.356836 ,0.358082 ,0.353682 ,0.354211 ,0.352952 ,0.354543]
+gman_mape_3=[0.271792 ,0.284824 ,0.281732 ,0.283210 ,0.282705 ,0.283630]
 
 plt.figure()
 font2 = {'family' : 'Times New Roman',
 'weight' : 'normal',
-'size'   : 10,
+'size'   : 12,
 }
 plt.ylabel('Loss(ug/m3)',font2)
 font1 = {'family' : 'Times New Roman',
 'weight' : 'normal',
-'size'   : 6,
+'size'   : 12,
 }
 
 a=np.array([1.2, 1.9])
@@ -107,139 +112,139 @@ for i in range(66*(K-100),66*K,66):
     mtstnet_pre_3.append(mtstnet[i+26:i + 66, 25:])
 
 
-plt.subplot(2,3,1)
-i,j=10,2
-plt.xticks(range(1,7), ['2021.8.26 7:50','7:55','8:00','8:05','8:10','8:15'])
-plt.plot(range(1,7),mtstnet_obs_1[i][j],marker='d',color= 'black', label=u'Observed value', linewidth=1)
-plt.plot(range(1,7),mtstnet_pre_1[i][j],marker='o', color= 'orange', label=u'MT-STNet', linewidth=1)
-plt.plot(range(1,7),gman_pre_1[i][j],marker='s', color= '#0cdc73', label=u'GMAN', linewidth=1)
-plt.legend(loc='upper left',prop=font2)
-# plt.xlabel("Target time steps", font2)
-plt.ylabel("Taffic flow", font2)
-plt.title("Entrance tall dataset (sample 1)", font2)
-
-plt.subplot(2,3,2)
-i,j=10,3
-plt.xticks(range(1,7), ['7:50','7:55','8:00','8:05','8:10','8:15'])
-plt.plot(range(1,7),mtstnet_obs_2[i][j],marker='d',color= 'black', label=u'Observed value', linewidth=1)
-plt.plot(range(1,7),mtstnet_pre_2[i][j],marker='o', color= 'orange', label=u'MT-STNet', linewidth=1)
-plt.plot(range(1,7),gman_pre_2[i][j],marker='s', color= '#0cdc73', label=u'GMAN', linewidth=1)
-plt.legend(loc='upper left',prop=font2)
-# plt.xlabel("Target time steps", font2)
-# plt.ylabel("Taffic flow", font2)
-plt.title("Exit tall dataset (sample 1)", font2)
-
-plt.subplot(2,3,3)
-i,j=10,39
-plt.xticks(range(1,7), ['7:50','7:55','8:00','8:05','8:10','8:15'])
-plt.plot(range(1,7),mtstnet_obs_3[i][j],marker='d',color= 'black', label=u'Observed value', linewidth=1)
-plt.plot(range(1,7),mtstnet_pre_3[i][j],marker='o', color= 'orange', label=u'MT-STNet', linewidth=1)
-plt.plot(range(1,7),gman_pre_3[i][j],marker='s', color= '#0cdc73', label=u'GMAN', linewidth=1)
-plt.legend(loc='upper left',prop=font2)
-# plt.xlabel("Target time steps", font2)
-# plt.ylabel("Taffic flow", font2)
-plt.title("Gantry dataset (sample 1)", font2)
-
-plt.subplot(2,3,4)
-i,j=10,4
-plt.gca().yaxis.set_major_locator(MaxNLocator(integer=True))
-plt.xticks(range(1,7), ['2021.8.26 7:50','7:55','8:00','8:05','8:10','8:15'])
-plt.plot(range(1,7),mtstnet_obs_1[i][j],marker='d',color= 'black', label=u'Observed value', linewidth=1)
-plt.plot(range(1,7),mtstnet_pre_1[i][j],marker='o', color= 'orange', label=u'MT-STNet', linewidth=1)
-plt.plot(range(1,7),gman_pre_1[i][j],marker='s', color= '#0cdc73', label=u'GMAN', linewidth=1)
-plt.legend(loc='upper left',prop=font2)
-plt.xlabel("Target time steps", font2)
-plt.ylabel("Taffic flow", font2)
-plt.title("Entrance tall dataset (sample 2)", font2)
-
-plt.subplot(2,3,5)
-i,j=10,6
-plt.gca().yaxis.set_major_locator(MaxNLocator(integer=True))
-plt.xticks(range(1,7), ['7:50','7:55','8:00','8:05','8:10','8:15'])
-plt.plot(range(1,7),mtstnet_obs_2[i][j],marker='d',color= 'black', label=u'Observed value', linewidth=1)
-plt.plot(range(1,7),mtstnet_pre_2[i][j],marker='o', color= 'orange', label=u'MT-STNet', linewidth=1)
-plt.plot(range(1,7),gman_pre_2[i][j],marker='s', color= '#0cdc73', label=u'GMAN', linewidth=1)
-plt.legend(loc='upper left',prop=font2)
-plt.xlabel("Target time steps", font2)
-# plt.ylabel("Taffic flow", font2)
-plt.title("Exit tall dataset (sample 2)", font2)
-
-plt.subplot(2,3,6)
-i,j=10,16
-plt.xticks(range(1,7), ['7:50','7:55','8:00','8:05','8:10','8:15'])
-plt.plot(range(1,7),mtstnet_obs_3[i][j],marker='d',color= 'black', label=u'Observed value', linewidth=1)
-plt.plot(range(1,7),mtstnet_pre_3[i][j],marker='o', color= 'orange', label=u'MT-STNet', linewidth=1)
-plt.plot(range(1,7),gman_pre_3[i][j],marker='s', color= '#0cdc73', label=u'GMAN', linewidth=1)
-plt.legend(loc='upper left',prop=font2)
-plt.xlabel("Target time steps", font2)
-# plt.ylabel("Taffic flow", font2)
-plt.title("Gantry dataset (sample 2)", font2)
-
-plt.show()
-
-
-
-
-
-# plt.figure()
 # plt.subplot(2,3,1)
-# plt.scatter(mtstnet_obs_1,mtstnet_pre_1,alpha=0.7,color='dimgray',edgecolor = "black",marker='o',label=u'MT-STNet',linewidths=1)
-# a=[i for i in range(220)]
-# b=[i for i in range(220)]
-# plt.plot(a,b,'black',linewidth=2)
-# #plt.scatter(a, b)
-# #plt.plot(test_y_out,'r*:',label=u'predicted value')
-# plt.title("Entrance tall dataset", font2)
-# #设置横纵坐标的名称以及对应字体格式
-# # plt.xlabel("Observed PM2.5 (ug/m3)", font2)
-# plt.ylabel("Predicted traffic flow", font2)
+# i,j=10,2
+# plt.xticks(range(1,7), ['2021.8.26 7:50','7:55','8:00','8:05','8:10','8:15'])
+# plt.plot(range(1,7),mtstnet_obs_1[i][j],marker='d',color= 'black', label=u'Observed value', linewidth=1)
+# plt.plot(range(1,7),mtstnet_pre_1[i][j],marker='o', color= 'orange', label=u'MT-STNet', linewidth=1)
+# plt.plot(range(1,7),gman_pre_1[i][j],marker='s', color= '#0cdc73', label=u'GMAN', linewidth=1)
 # plt.legend(loc='upper left',prop=font2)
+# # plt.xlabel("Target time steps", font2)
+# plt.ylabel("Taffic flow", font2)
+# plt.title("Entrance toll dataset (sample 1)", font2)
 #
 # plt.subplot(2,3,2)
-# plt.scatter(mtstnet_obs_2,mtstnet_pre_2,alpha=0.7,color='dimgray',edgecolor = "black",marker='o',label=u'MT-STNet',linewidths=1)
-# plt.plot(a,b,'black',linewidth=2)
-# #plt.scatter(a, b)
-# #plt.plot(test_y_out,'r*:',label=u'predicted value')
-# plt.title("Exit tall dataset", font2)
-# # plt.xlabel("Observed PM2.5 (μg/m3)", font2)
-# # plt.ylabel("Predicted PM2.5 (μg/m3)", font2)
+# i,j=10,3
+# plt.xticks(range(1,7), ['7:50','7:55','8:00','8:05','8:10','8:15'])
+# plt.plot(range(1,7),mtstnet_obs_2[i][j],marker='d',color= 'black', label=u'Observed value', linewidth=1)
+# plt.plot(range(1,7),mtstnet_pre_2[i][j],marker='o', color= 'orange', label=u'MT-STNet', linewidth=1)
+# plt.plot(range(1,7),gman_pre_2[i][j],marker='s', color= '#0cdc73', label=u'GMAN', linewidth=1)
 # plt.legend(loc='upper left',prop=font2)
+# # plt.xlabel("Target time steps", font2)
+# # plt.ylabel("Taffic flow", font2)
+# plt.title("Exit toll dataset (sample 1)", font2)
 #
 # plt.subplot(2,3,3)
-# plt.scatter(mtstnet_obs_3,mtstnet_pre_3,alpha=0.7,color='dimgray',edgecolor = "black",marker='o',label=u'MT-STNet',linewidths=1)
-# c=[i for i in range(330)]
-# d=[i for i in range(330)]
-# plt.plot(c,d,'black',linewidth=2)
-# plt.title("Gantry dataset", font2)
-# #设置横纵坐标的名称以及对应字体格式
-# # plt.xlabel("Observed PM2.5 (μg/m3)", font2)
-# # plt.ylabel("Predicted PM2.5 (μg/m3)", font2)
+# i,j=10,39
+# plt.xticks(range(1,7), ['7:50','7:55','8:00','8:05','8:10','8:15'])
+# plt.plot(range(1,7),mtstnet_obs_3[i][j],marker='d',color= 'black', label=u'Observed value', linewidth=1)
+# plt.plot(range(1,7),mtstnet_pre_3[i][j],marker='o', color= 'orange', label=u'MT-STNet', linewidth=1)
+# plt.plot(range(1,7),gman_pre_3[i][j],marker='s', color= '#0cdc73', label=u'GMAN', linewidth=1)
 # plt.legend(loc='upper left',prop=font2)
+# # plt.xlabel("Target time steps", font2)
+# # plt.ylabel("Taffic flow", font2)
+# plt.title("Gantry dataset (sample 1)", font2)
 #
 # plt.subplot(2,3,4)
-# plt.scatter(gman_obs_1,gman_pre_1,alpha=0.7,color='dimgray',edgecolor = "black",marker='o',label=u'GMAN',linewidths=1)
-# plt.plot(a,b,'black',linewidth=2)
-# #设置横纵坐标的名称以及对应字体格式
-# plt.xlabel("Observed traffic flow", font2)
-# plt.ylabel("Predicted traffic flow", font2)
+# i,j=10,4
+# plt.gca().yaxis.set_major_locator(MaxNLocator(integer=True))
+# plt.xticks(range(1,7), ['2021.8.26 7:50','7:55','8:00','8:05','8:10','8:15'])
+# plt.plot(range(1,7),mtstnet_obs_1[i][j],marker='d',color= 'black', label=u'Observed value', linewidth=1)
+# plt.plot(range(1,7),mtstnet_pre_1[i][j],marker='o', color= 'orange', label=u'MT-STNet', linewidth=1)
+# plt.plot(range(1,7),gman_pre_1[i][j],marker='s', color= '#0cdc73', label=u'GMAN', linewidth=1)
 # plt.legend(loc='upper left',prop=font2)
+# plt.xlabel("Target time steps", font2)
+# plt.ylabel("Taffic flow", font2)
+# plt.title("Entrance toll dataset (sample 2)", font2)
 #
 # plt.subplot(2,3,5)
-# plt.scatter(gman_obs_2,gman_pre_2,alpha=0.7,color='dimgray',edgecolor = "black",marker='o',label=u'GMAN',linewidths=1)
-# plt.plot(a,b,'black',linewidth=2)
-# #设置横纵坐标的名称以及对应字体格式
-# plt.xlabel("Observed traffic flow", font2)
-# # plt.ylabel("Predicted PM2.5 (μg/m3)", font2)
+# i,j=10,6
+# plt.gca().yaxis.set_major_locator(MaxNLocator(integer=True))
+# plt.xticks(range(1,7), ['7:50','7:55','8:00','8:05','8:10','8:15'])
+# plt.plot(range(1,7),mtstnet_obs_2[i][j],marker='d',color= 'black', label=u'Observed value', linewidth=1)
+# plt.plot(range(1,7),mtstnet_pre_2[i][j],marker='o', color= 'orange', label=u'MT-STNet', linewidth=1)
+# plt.plot(range(1,7),gman_pre_2[i][j],marker='s', color= '#0cdc73', label=u'GMAN', linewidth=1)
 # plt.legend(loc='upper left',prop=font2)
+# plt.xlabel("Target time steps", font2)
+# # plt.ylabel("Taffic flow", font2)
+# plt.title("Exit toll dataset (sample 2)", font2)
 #
 # plt.subplot(2,3,6)
-# plt.scatter(gman_obs_3,gman_pre_3,alpha=0.7,color='dimgray',edgecolor = "black",marker='o',label=u'GMAN',linewidths=1)
-# plt.plot(c,d,'black',linewidth=2)
-# #设置横纵坐标的名称以及对应字体格式
-# plt.xlabel("Observed traffic flow", font2)
-# # plt.ylabel("Predicted PM2.5 (μg/m3)", font2)
+# i,j=10,16
+# plt.xticks(range(1,7), ['7:50','7:55','8:00','8:05','8:10','8:15'])
+# plt.plot(range(1,7),mtstnet_obs_3[i][j],marker='d',color= 'black', label=u'Observed value', linewidth=1)
+# plt.plot(range(1,7),mtstnet_pre_3[i][j],marker='o', color= 'orange', label=u'MT-STNet', linewidth=1)
+# plt.plot(range(1,7),gman_pre_3[i][j],marker='s', color= '#0cdc73', label=u'GMAN', linewidth=1)
 # plt.legend(loc='upper left',prop=font2)
+# plt.xlabel("Target time steps", font2)
+# # plt.ylabel("Taffic flow", font2)
+# plt.title("Gantry dataset (sample 2)", font2)
+#
 # plt.show()
+
+
+
+
+
+plt.figure()
+plt.subplot(2,3,1)
+plt.scatter(mtstnet_obs_1,mtstnet_pre_1,alpha=0.7,color='dimgray',edgecolor = "black",marker='o',label=u'MT-STNet',linewidths=1)
+a=[i for i in range(220)]
+b=[i for i in range(220)]
+plt.plot(a,b,'black',linewidth=2)
+#plt.scatter(a, b)
+#plt.plot(test_y_out,'r*:',label=u'predicted value')
+plt.title("Entrance tall dataset", font2)
+#设置横纵坐标的名称以及对应字体格式
+# plt.xlabel("Observed PM2.5 (ug/m3)", font2)
+plt.ylabel("Predicted traffic flow", font2)
+plt.legend(loc='upper left',prop=font2)
+
+plt.subplot(2,3,2)
+plt.scatter(mtstnet_obs_2,mtstnet_pre_2,alpha=0.7,color='dimgray',edgecolor = "black",marker='o',label=u'MT-STNet',linewidths=1)
+plt.plot(a,b,'black',linewidth=2)
+#plt.scatter(a, b)
+#plt.plot(test_y_out,'r*:',label=u'predicted value')
+plt.title("Exit tall dataset", font2)
+# plt.xlabel("Observed PM2.5 (μg/m3)", font2)
+# plt.ylabel("Predicted PM2.5 (μg/m3)", font2)
+plt.legend(loc='upper left',prop=font2)
+
+plt.subplot(2,3,3)
+plt.scatter(mtstnet_obs_3,mtstnet_pre_3,alpha=0.7,color='dimgray',edgecolor = "black",marker='o',label=u'MT-STNet',linewidths=1)
+c=[i for i in range(330)]
+d=[i for i in range(330)]
+plt.plot(c,d,'black',linewidth=2)
+plt.title("Gantry dataset", font2)
+#设置横纵坐标的名称以及对应字体格式
+# plt.xlabel("Observed PM2.5 (μg/m3)", font2)
+# plt.ylabel("Predicted PM2.5 (μg/m3)", font2)
+plt.legend(loc='upper left',prop=font2)
+
+plt.subplot(2,3,4)
+plt.scatter(gman_obs_1,gman_pre_1,alpha=0.7,color='dimgray',edgecolor = "black",marker='o',label=u'GMAN',linewidths=1)
+plt.plot(a,b,'black',linewidth=2)
+#设置横纵坐标的名称以及对应字体格式
+plt.xlabel("Observed traffic flow", font2)
+plt.ylabel("Predicted traffic flow", font2)
+plt.legend(loc='upper left',prop=font2)
+
+plt.subplot(2,3,5)
+plt.scatter(gman_obs_2,gman_pre_2,alpha=0.7,color='dimgray',edgecolor = "black",marker='o',label=u'GMAN',linewidths=1)
+plt.plot(a,b,'black',linewidth=2)
+#设置横纵坐标的名称以及对应字体格式
+plt.xlabel("Observed traffic flow", font2)
+# plt.ylabel("Predicted PM2.5 (μg/m3)", font2)
+plt.legend(loc='upper left',prop=font2)
+
+plt.subplot(2,3,6)
+plt.scatter(gman_obs_3,gman_pre_3,alpha=0.7,color='dimgray',edgecolor = "black",marker='o',label=u'GMAN',linewidths=1)
+plt.plot(c,d,'black',linewidth=2)
+#设置横纵坐标的名称以及对应字体格式
+plt.xlabel("Observed traffic flow", font2)
+# plt.ylabel("Predicted PM2.5 (μg/m3)", font2)
+plt.legend(loc='upper left',prop=font2)
+plt.show()
 
 
 
@@ -260,21 +265,21 @@ plt.show()
 # mape_3=[0.2836,0.2789,0.2810,0.2735,0.2685,0.2871,0.2765]
 # plt.ylim(4,8)
 # plt.xticks(range(1,9),['GMAN','MT-STNet','STNet','STNet-1','STNet-2','STNet-3','STNet-3'])
-# plt.bar(x, rmse_1, width=width,label='Entrance tall dataset',color = 'red')
-# plt.bar(x + width, rmse_2, width=width,label='Exit tall dataset',color = 'black')
+# plt.bar(x, rmse_1, width=width,label='Entrance toll dataset',color = 'red')
+# plt.bar(x + width, rmse_2, width=width,label='Exit toll dataset',color = 'black')
 # plt.bar(x + 2 * width, rmse_3, width=width,label='Gantry dataset',color='salmon')
 # plt.ylabel('RMSE',font2)
-# plt.title('Target time steps $Q$ = 6 ([0-30 min])',font2)
+# # plt.title('Target time steps $Q$ = 6 ([0-30 min])',font2)
 # plt.legend()
 #
 # plt.subplot(1,2,2)
 # plt.ylim(0.2, 0.45)
 # plt.xticks(range(1,9),['GMAN','MT-STNet','STNet','STNet-1','STNet-2','STNet-3','STNet-3'])
-# plt.bar(x, mape_1, width=width,label='Entrance tall dataset',color = 'red')
-# plt.bar(x + width, mape_2, width=width,label='Exit tall dataset',color = 'black')
+# plt.bar(x, mape_1, width=width,label='Entrance toll dataset',color = 'red')
+# plt.bar(x + width, mape_2, width=width,label='Exit toll dataset',color = 'black')
 # plt.bar(x + 2 * width, mape_3, width=width,label='Gantry dataset',color='salmon')
 # plt.ylabel('MAPE',font2)
-# plt.title('Target time steps $Q$ = 6 ([0-30 min])',font2)
+# # plt.title('Target time steps $Q$ = 6 ([0-30 min])',font2)
 # plt.legend()
 # plt.show()
 
