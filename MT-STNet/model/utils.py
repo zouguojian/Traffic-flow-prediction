@@ -237,9 +237,7 @@ def metric(pred, label):
     with np.errstate(divide='ignore', invalid='ignore'):
         mask = np.not_equal(label, 0)
         mask = mask.astype(np.float32)
-        print(np.mean(mask))
         mask /= np.mean(mask)
-        print(mask)
         mae = np.abs(np.subtract(pred, label)).astype(np.float32)
         rmse = np.square(mae)
         mape = np.divide(mae, label)

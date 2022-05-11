@@ -15,14 +15,14 @@ axis=2: represents the sparse matrix shape.
 '''
 from __future__ import division
 from __future__ import print_function
-from model.utils import *
+from baseline.utils import *
 from model.models import GCN
 from model.hyparameter import parameter
 from model.embedding import embedding
 from baseline.lstm.lstm import LstmClass
 from baseline.bi_lstm.bi_lstm import BilstmClass
 from baseline.dela.dela import DelaClass
-from baseline.att_convlstm.model import at_convlstm
+# from baseline.att_convlstm.model import at_convlstm
 
 import pandas as pd
 import tensorflow as tf
@@ -226,12 +226,12 @@ class Model(object):
             # this step to presict the polutant concentration
             self.pre=encoder_init.decoding(x, embeddings)
             print('pres shape is : ', self.pre.shape)
-        elif self.hp.model_name == 'atconvlstm':
-            features = tf.reshape(self.placeholders['features'], shape=[self.hp.batch_size,
-                                                                        self.hp.input_length,
-                                                                        self.hp.site_num,
-                                                                        self.hp.features])
-            self.pre=at_convlstm(main_input=features)
+        # elif self.hp.model_name == 'atconvlstm':
+        #     features = tf.reshape(self.placeholders['features'], shape=[self.hp.batch_size,
+        #                                                                 self.hp.input_length,
+        #                                                                 self.hp.site_num,
+        #                                                                 self.hp.features])
+        #     self.pre=at_convlstm(main_input=features)
 
         self.loss = tf.reduce_mean(
             tf.sqrt(tf.reduce_mean(tf.square(self.pre + 1e-10 - self.placeholders['labels']), axis=0)))
