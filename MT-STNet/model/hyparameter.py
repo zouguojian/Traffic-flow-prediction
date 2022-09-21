@@ -5,8 +5,8 @@ class parameter(object):
     def __init__(self,parser):
         self.parser=parser
 
-        self.parser.add_argument('--save_path', type=str, default='weights/lstm_1/', help='save path')
-        self.parser.add_argument('--model_name', type=str, default='lstm', help='training or testing model name')
+        self.parser.add_argument('--save_path', type=str, default='weights/MT_STNet/', help='save path')
+        self.parser.add_argument('--model_name', type=str, default='MT_STNet', help='training or testing model name')
 
         self.parser.add_argument('--divide_ratio', type=float, default=0.8, help='data_divide')
         self.parser.add_argument('--is_training', type=bool, default=True, help='is training')
@@ -21,7 +21,7 @@ class parameter(object):
         self.parser.add_argument('--num_blocks', type=int, default=1, help='total number of attention layers')
 
         #每个点表示一个监测站点，目前66个监测站点
-        self.parser.add_argument('--emb_size', type=int, default=256, help='embedding size')
+        self.parser.add_argument('--emb_size', type=int, default=128, help='embedding size') # 对比模型中可能为256
         self.parser.add_argument('--features', type=int, default=1, help='numbers of the feature')
         self.parser.add_argument('--normalize', type=bool, default=True, help='normalize')
         self.parser.add_argument('--input_length', type=int, default=6, help='input length')

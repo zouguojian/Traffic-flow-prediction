@@ -91,36 +91,38 @@ if __name__ == '__main__':
     distance['distance'] = distance['distance']/(distance['distance'].max()-distance['distance'].min())
     distance_dict={(line[0], line[1]):line[2] for line in distance.values}
 
-    station_index = pd.read_csv('/Users/guojianzou/Traffic-flow-prediction/MT-STNet/data/station_index.csv',
-                           usecols=['station', 'index'])
+    # 站点映射的index，字典存放
+    station_index = pd.read_csv('/Users/guojianzou/Traffic-flow-prediction/MT-STNet/data/station_index.csv', usecols=['station', 'index'])
     station_index_dict={line[0]:line[1] for line in station_index.values}
 
-    # graph_dict = {i:{j: 200 for j in range(site_num)} for i in range(site_num)}
+    # 初始化站点间的直接距离，无连接的即为200
     graph_dict = {station_index_i: {station_index_j: 200 for station_index_j in station_index.values[:,0]} for station_index_i in station_index.values[:,0]}
     for key in distance_dict:
-        # graph_dict[station_index_dict[key[0]]][station_index_dict[key[1]]]=distance_dict[key]
         graph_dict[key[0]][key[1]] = distance_dict[key]
 
     parent_dict, distance_dict = dijkstra(graph_dict, 'in_101001')
     print(parent_dict)
     print(distance_dict)
     print(distance_path(graph_dict,'in_101001','out_106007'))
+    
+    # 用于存储最短路径
+    # file = open('/Users/guojianzou/Traffic-flow-prediction/MT-STNet/data/sp.csv', 'w', encoding='utf-8')
+    # writer = csv.writer(file)
+    # writer.writerow([i for i in range(site_num)])
+    # for station_index_i in station_index.values[:,0]:
+    #     parent_dict, distance_dict = dijkstra(graph_dict, station_index_i)
+    #     for station_index_j in station_index.values[:,0]:
+    #         if distance_dict[station_index_j]<200:
+    #             sp=distance_path(graph_dict, station_index_i, station_index_j)
+    #             left_sp=[edge[(sp[i],sp[i+1])] for i in range(len(sp)-1)]   # 最短路径
+    #             right_sp = [roads_num for _ in range(site_num-len(left_sp))]
+    #             writer.writerow(left_sp+right_sp)
+    #         else:
+    #             writer.writerow([roads_num for _ in range(site_num)])
+    # file.close()
 
-    file = open('/Users/guojianzou/Traffic-flow-prediction/MT-STNet/data/sp.csv', 'w', encoding='utf-8')
-    writer = csv.writer(file)
-    writer.writerow([i for i in range(site_num)])
-    for station_index_i in station_index.values[:,0]:
-        parent_dict, distance_dict = dijkstra(graph_dict, station_index_i)
-        for station_index_j in station_index.values[:,0]:
-            if distance_dict[station_index_j]<200:
-                sp=distance_path(graph_dict, station_index_i, station_index_j)
-                left_sp=[edge[(sp[i],sp[i+1])] for i in range(len(sp)-1)]
-                right_sp = [roads_num for _ in range(site_num-len(left_sp))]
-                writer.writerow(left_sp+right_sp)
-            else:
-                writer.writerow([roads_num for _ in range(site_num)])
-    file.close()
 
+    # 用于存储最短路径长度
     # sort_list=[]
     # sp_matrix=[[roads_num for _ in range(site_num)] for _ in range(site_num)]
     # file = open('/Users/guojianzou/Traffic-flow-prediction/MT-STNet/data/dis.csv', 'w', encoding='utf-8')
@@ -128,7 +130,7 @@ if __name__ == '__main__':
     # writer.writerow([i for i in range(site_num)])
     # for station_index_i in station_index.values[:,0]:
     #     parent_dict, distance_dict = dijkstra(graph_dict, station_index_i)
-    #
+    
     #     for key in distance_dict:
     #         sp_matrix[station_index_dict[station_index_i]][station_index_dict[key]]=distance_dict[key]
     #         if sp_matrix[station_index_dict[station_index_i]][station_index_dict[key]] not in sort_list:

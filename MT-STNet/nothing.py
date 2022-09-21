@@ -185,7 +185,7 @@ for i in range(66*(K-100),66*K,66):
 
 
 
-
+'''
 plt.figure()
 plt.subplot(2,3,1)
 plt.scatter(mtstnet_obs_1,mtstnet_pre_1,alpha=0.7,color='dimgray',edgecolor = "black",marker='o',label=u'MT-STNet',linewidths=1)
@@ -245,43 +245,42 @@ plt.xlabel("Observed traffic flow", font2)
 # plt.ylabel("Predicted PM2.5 (μg/m3)", font2)
 plt.legend(loc='upper left',prop=font2)
 plt.show()
+'''
 
 
 
 
 
+x = np.arange(1, 8, 1)
+total_width, n = 0.8, 3
+width = total_width / n
+x = x - (total_width - width) / 2
+plt.subplot(1,2,1)
+rmse_1=[5.6085,5.5612,5.7057,5.8235,5.6626,6.0323,5.5336]
+rmse_2=[5.3883,5.4198,5.5582,5.6798,5.5089,5.7972,5.3924]
+rmse_3=[7.4951,7.4619,7.5817,7.5810,7.4643,7.8891,7.4103]
+mape_1=[0.3756,0.3498,0.4027,0.3600,0.3527,0.3900,0.3516]
+mape_2=[0.3545,0.3255,0.3665,0.3464,0.3340,0.3653,0.3282]
+mape_3=[0.2836,0.2789,0.2810,0.2735,0.2685,0.2871,0.2765]
+plt.ylim(4,8)
+plt.xticks(range(1,9),['GMAN','MT-STNet','STNet','STNet-1','STNet-2','STNet-3','STNet-4'])
+plt.bar(x, rmse_1, width=width,label='Entrance toll dataset',color = 'red')
+plt.bar(x + width, rmse_2, width=width,label='Exit toll dataset',color = 'black')
+plt.bar(x + 2 * width, rmse_3, width=width,label='Gantry dataset',color='salmon')
+plt.ylabel('RMSE',font2)
+# plt.title('Target time steps $Q$ = 6 ([0-30 min])',font2)
+plt.legend()
 
-# x = np.arange(1, 8, 1)
-# total_width, n = 0.8, 3
-# width = total_width / n
-# x = x - (total_width - width) / 2
-# plt.subplot(1,2,1)
-#
-# rmse_1=[5.6085,5.5612,5.7057,5.8235,5.6626,6.0323,5.5336]
-# rmse_2=[5.3883,5.4198,5.5582,5.6798,5.5089,5.7972,5.3924]
-# rmse_3=[7.4951,7.4619,7.5817,7.5810,7.4643,7.8891,7.4103]
-# mape_1=[0.3756,0.3498,0.4027,0.3600,0.3527,0.3900,0.3516]
-# mape_2=[0.3545,0.3255,0.3665,0.3464,0.3340,0.3653,0.3282]
-# mape_3=[0.2836,0.2789,0.2810,0.2735,0.2685,0.2871,0.2765]
-# plt.ylim(4,8)
-# plt.xticks(range(1,9),['GMAN','MT-STNet','STNet','STNet-1','STNet-2','STNet-3','STNet-3'])
-# plt.bar(x, rmse_1, width=width,label='Entrance toll dataset',color = 'red')
-# plt.bar(x + width, rmse_2, width=width,label='Exit toll dataset',color = 'black')
-# plt.bar(x + 2 * width, rmse_3, width=width,label='Gantry dataset',color='salmon')
-# plt.ylabel('RMSE',font2)
-# # plt.title('Target time steps $Q$ = 6 ([0-30 min])',font2)
-# plt.legend()
-#
-# plt.subplot(1,2,2)
-# plt.ylim(0.2, 0.45)
-# plt.xticks(range(1,9),['GMAN','MT-STNet','STNet','STNet-1','STNet-2','STNet-3','STNet-3'])
-# plt.bar(x, mape_1, width=width,label='Entrance toll dataset',color = 'red')
-# plt.bar(x + width, mape_2, width=width,label='Exit toll dataset',color = 'black')
-# plt.bar(x + 2 * width, mape_3, width=width,label='Gantry dataset',color='salmon')
-# plt.ylabel('MAPE',font2)
-# # plt.title('Target time steps $Q$ = 6 ([0-30 min])',font2)
-# plt.legend()
-# plt.show()
+plt.subplot(1,2,2)
+plt.ylim(0.2, 0.45)
+plt.xticks(range(1,9),['GMAN','MT-STNet','STNet','STNet-1','STNet-2','STNet-3','STNet-4'])
+plt.bar(x, mape_1, width=width,label='Entrance toll dataset',color = 'red')
+plt.bar(x + width, mape_2, width=width,label='Exit toll dataset',color = 'black')
+plt.bar(x + 2 * width, mape_3, width=width,label='Gantry dataset',color='salmon')
+plt.ylabel('MAPE',font2)
+# plt.title('Target time steps $Q$ = 6 ([0-30 min])',font2)
+plt.legend()
+plt.show()
 
 
 
@@ -318,6 +317,8 @@ plt.show()
 # plt.xlabel('Target time steps',font2)
 # plt.title('Exit tall dataset',font2)
 # plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
+# plt.show()
+
 #
 # plt.subplot(1,3,3)
 # plt.plot(range(1,7,1),gman_mae_3,marker='o',color='orange',linestyle='-', linewidth=1,label='GMAN')

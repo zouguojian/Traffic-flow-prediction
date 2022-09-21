@@ -269,8 +269,6 @@ class Model(object):
         #                 ['minute_' + str(i) for i in range(self.hp.predict_length)]+['label_'+str(i) for i in range(self.hp.predict_length)]+
         #                 ['predict_' + str(i) for i in range(self.hp.predict_length)])
 
-        # '''
-
         for i in range(int((iterate_test.length // self.hp.site_num
                             - iterate_test.length // self.hp.site_num * iterate_test.divide_ratio
                             - (iterate_test.input_length + iterate_test.output_length)) // iterate_test.output_length)
