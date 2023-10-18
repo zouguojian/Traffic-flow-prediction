@@ -16,44 +16,50 @@ axis=2: represents the sparse matrix shape.
 from __future__ import division
 from __future__ import print_function
 from model.utils import *
-from model.models import GCN
 from model.hyparameter import parameter
 from model.embedding import embedding
-from model.sp_dis import sp_dis
-from model.degree import in_out_deg
-from model.encoder import Encoder_ST
-from model.decoder import Decoder_ST
-
-import pandas as pd
-import tensorflow as tf
-import numpy as np
-import matplotlib.pyplot as plt
-import model.data_next as data_load
-import os
-import argparse
-import csv
-import datetime
+from model.inits import *
+from model.data_load import *
+from model.st_block import STAttBlock, BridgeTrans, MT_STNet
 
 tf.reset_default_graph()
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 logs_path = "board"
-
-# os.environ['CUDA_VISIBLE_DEVICES']='2'
-#
-# from tensorflow.compat.v1 import ConfigProto
-# from tensorflow.compat.v1 import InteractiveSession
-#
-# config = ConfigProto()
-# config.gpu_options.allow_growth = True
-# session = InteractiveSession(config=config)
+os.environ['CUDA_VISIBLE_DEVICES'] = '3'
+from tensorflow.compat.v1 import ConfigProto
+from tensorflow.compat.v1 import InteractiveSession
+tf.set_random_seed(1)
 
 
 class Model(object):
-    def __init__(self, hp):
+    def __init__(self, hp, mean=0.0, std=1.0):
         '''
         :param para:
         '''
-        self.hp = hp             # hyperparameter
+        self.hp = hp
+        self.model_name = self.hp.model_name
+        self.batch_size = self.hp.batch_size
+        self.epochs = self.hp.epochs
+        self.is_training = self.hp.is_training
+        self.site_num = self.hp.site_num
+        self.edge_num = self.hp.edge_num
+        self.features = self.hp.features
+        self.emb_size = self.hp.emb_size
+        self.input_len = self.hp.input_length
+        self.output_len = self.hp.output_length
+        self.total_len = self.input_len + self.output_len
+        self.num_blocks = self.hp.num_blocks
+        self.granularity = self.hp.granularity
+        self.scale = False
+        self.num_supports = 1 + self.hp.max_degree if self.model_name == 'gcn_cheby' else 1
+        self.decay_epoch=self.hp.decay_epoch
+        self.num_train = 23967
+        self.heads = self.hp.num_heads
+        self.learning_rate = self.hp.learning_rate
+        self.pre_len = self.hp.pre_len
+        self.mean=mean
+        self.std=std
+
         self.init_gcn()          # init gcn model
         self.init_placeholder()  # init placeholder
         self.init_embed()        # init embedding
@@ -68,35 +74,35 @@ class Model(object):
         # define gcn model
         if self.hp.model_name == 'gcn_cheby':
             self.support = chebyshev_polynomials(self.adj, self.hp.max_degree)
-            self.num_supports = 1 + self.hp.max_degree
-            self.model_func = GCN
+            # self.num_supports = 1 + self.hp.max_degree
+            # self.model_func = GCN
         else:
             self.support = [self.adj]
-            self.num_supports = 1
-            self.model_func = GCN
+            # self.num_supports = 1
+            # self.model_func = GCN
 
     def init_placeholder(self):
         '''
         :return:
         '''
         self.placeholders = {
-            'sp':tf.placeholder(tf.int32, shape=(self.hp.site_num*self.hp.site_num, 15), name='input_sp'),
-            'dis':tf.placeholder(tf.int32, shape=(self.hp.site_num, self.hp.site_num), name='input_dis'),
-            'in_deg': tf.placeholder(tf.int32, shape=(1,self.hp.site_num), name='input_in_deg'),
-            'out_deg': tf.placeholder(tf.int32, shape=(1, self.hp.site_num), name='input_out_deg'),
-            'position': tf.placeholder(tf.int32, shape=(1, self.hp.site_num), name='input_position'),
-            'day': tf.placeholder(tf.int32, shape=(None, self.hp.site_num), name='input_day'),
-            'hour': tf.placeholder(tf.int32, shape=(None, self.hp.site_num), name='input_hour'),
-            'minute': tf.placeholder(tf.int32, shape=(None, self.hp.site_num), name='input_minute'),
+            'sp':tf.placeholder(tf.int32, shape=(self.site_num*self.site_num, 15), name='input_sp'),
+            'dis':tf.placeholder(tf.float32, shape=(self.site_num, self.site_num), name='input_dis'),
+            'in_deg': tf.placeholder(tf.int32, shape=(1,self.site_num), name='input_in_deg'),
+            'out_deg': tf.placeholder(tf.int32, shape=(1, self.site_num), name='input_out_deg'),
+            'position': tf.placeholder(tf.int32, shape=(1, self.site_num), name='input_position'),
+            'day_of_week': tf.placeholder(tf.int32, shape=(None, self.site_num), name='day_of_week'),
+            'minute_of_day': tf.placeholder(tf.int32, shape=(None, self.site_num), name='minute_of_day'),
             'indices_i': tf.placeholder(dtype=tf.int64, shape=[None, None], name='input_indices'),
             'values_i': tf.placeholder(dtype=tf.float32, shape=[None], name='input_values'),
             'dense_shape_i': tf.placeholder(dtype=tf.int64, shape=[None], name='input_dense_shape'),
-            'features': tf.placeholder(tf.float32, shape=[None, self.hp.site_num, self.hp.features], name='input_features'),
-            'labels': tf.placeholder(tf.float32, shape=[None, self.hp.site_num, self.hp.output_length], name='labels'),
+            'features': tf.placeholder(tf.float32, shape=[None, self.input_len, self.site_num, self.features], name='input_features'),
+            'x_all': tf.placeholder(tf.float32, shape=[None, self.total_len, self.site_num, self.features], name='last_week'),
+            'labels': tf.placeholder(tf.float32, shape=[None, self.site_num, self.output_len], name='labels'),
             'dropout': tf.placeholder_with_default(0., shape=(), name='input_dropout'),
+            'is_training': tf.placeholder(shape=(), dtype=tf.bool),
             'num_features_nonzero': tf.placeholder(tf.int32, name='input_zero')  # helper variable for sparse dropout
         }
-
         self.supports = [tf.SparseTensor(indices=self.placeholders['indices_i'],
                                          values=self.placeholders['values_i'],
                                          dense_shape=self.placeholders['dense_shape_i']) for _ in range(self.num_supports)]
@@ -115,296 +121,164 @@ class Model(object):
         '''
         :return:
         '''
-        self.sp_emb = embedding(self.placeholders['sp'],vocab_size=self.hp.edge_num+1, num_units=self.hp.emb_size,scale=False, scope="sp_embed")
-        self.dis_emb = embedding(self.placeholders['dis'],vocab_size=734, num_units=1, scale=False, scope="dis_embed")
-        self.in_deg_emb = embedding(self.placeholders['in_deg'], vocab_size=5, num_units=self.hp.emb_size, scale=False, scope="in_embed")
-        self.out_deg_emb = embedding(self.placeholders['out_deg'], vocab_size=5, num_units=self.hp.emb_size, scale=False, scope="out_embed")
+        self.sp_em = embedding(self.placeholders['sp'], vocab_size=self.edge_num + 1, num_units=self.emb_size, scale=self.scale, scope="sp_emb")
+        self.in_deg_em = embedding(self.placeholders['in_deg'], vocab_size=5, num_units=self.emb_size, scale=self.scale, scope="in_emb")
+        self.out_deg_em = embedding(self.placeholders['out_deg'], vocab_size=5, num_units=self.emb_size, scale=self.scale, scope="out_emb")
 
-        # self.edge_dis = tf.get_variable('dis_embed',
-        #                                 dtype=tf.float32,
-        #                                 shape=[self.hp.site_num*self.hp.site_num, 1],
-        #                                 initializer=tf.truncated_normal_initializer(mean=0, stddev=1, seed=0))
-        with tf.variable_scope('position'):
-            p_emd = embedding(self.placeholders['position'], vocab_size=self.hp.site_num,num_units=self.hp.emb_size,scale=False, scope="position_embed")
-            p_emd = tf.reshape(p_emd, shape=[1, self.hp.site_num, self.hp.emb_size])
-            p_emd = tf.expand_dims(p_emd, axis=0)
-            self.p_emd = tf.tile(p_emd, [self.hp.batch_size, self.hp.input_length+self.hp.output_length, 1, 1])
-        with tf.variable_scope('day'):
-            self.d_emb = embedding(self.placeholders['day'], vocab_size=32, num_units=self.hp.emb_size,scale=False, scope="day_embed")
-            self.d_emd = tf.reshape(self.d_emb,
-                                    shape=[self.hp.batch_size, self.hp.input_length + self.hp.output_length,
-                                           self.hp.site_num, self.hp.emb_size])
-        with tf.variable_scope('hour'):
-            self.h_emb = embedding(self.placeholders['hour'], vocab_size=24, num_units=self.hp.emb_size,scale=False, scope="hour_embed")
-            self.h_emd = tf.reshape(self.h_emb,
-                                    shape=[self.hp.batch_size, self.hp.input_length + self.hp.output_length,
-                                           self.hp.site_num, self.hp.emb_size])
-        with tf.variable_scope('mimute'):
-            self.m_emb = embedding(self.placeholders['minute'], vocab_size=12, num_units=self.hp.emb_size,scale=False, scope="minute_embed")
-            self.m_emd = tf.reshape(self.m_emb,
-                                    shape=[self.hp.batch_size, self.hp.input_length + self.hp.output_length,
-                                           self.hp.site_num, self.hp.emb_size])
+        p_em = embedding(self.placeholders['position'], vocab_size=self.site_num, num_units=self.emb_size, scale=self.scale, scope="p_emb")
+        self.p_em = tf.expand_dims(p_em, axis=0)
+
+        d_o_wem = embedding(self.placeholders['day_of_week'], vocab_size=7, num_units=self.emb_size,scale=self.scale, scope="d_emb")
+        self.d_o_wem = tf.reshape(d_o_wem, shape=[-1, self.total_len, self.site_num, self.emb_size])
+
+        m_o_dem = embedding(self.placeholders['minute_of_day'], vocab_size=24 * 60 //self.granularity, num_units=self.emb_size, scale=self.scale, scope="m_emb")
+        self.m_o_dem = tf.reshape(m_o_dem, shape=[-1, self.total_len, self.site_num, self.emb_size])
+
     def model(self):
         '''
         :return:
         '''
-        print('#................................in the encoder step......................................#')
-        with tf.variable_scope(name_or_scope='encoder'):
-            '''
-            return, the gcn output --- for example, inputs.shape is :  (32, 3, 162, 32)
-            axis=0: bath size
-            axis=1: input data time size
-            axis=2: numbers of the nodes
-            axis=3: output feature size
-            '''
-            features=tf.layers.dense(self.placeholders['features'], units=self.hp.emb_size) # [B*L, site num, emb_size]
-            in_day = self.d_emd[:, :self.hp.input_length, :, :]
-            in_hour = self.h_emd[:, :self.hp.input_length, :, :]
-            in_mimute = self.m_emd[:, :self.hp.input_length, :, :]
-            in_position = self.p_emd[:, :self.hp.input_length, :, :]
+        global_step = tf.Variable(0, trainable=False)
+        bn_momentum = tf.train.exponential_decay(0.5, global_step, decay_steps=self.decay_epoch * self.num_train // self.batch_size,
+            decay_rate=0.5, staircase=True)
+        bn_decay = tf.minimum(0.99, 1 - bn_momentum)
 
-            encoder=Encoder_ST(hp=self.hp, placeholders=self.placeholders, model_func=self.model_func)
-            encoder_out=encoder.encoder_spatio_temporal(features=features,
-                                                        day=in_day,
-                                                        hour=in_hour,
-                                                        minute=in_mimute,
-                                                        position=in_position,
-                                                        supports=self.supports,
-                                                        sp=self.sp_emb,
-                                                        dis=self.dis_emb,
-                                                        in_deg=self.in_deg_emb,
-                                                        out_deg=self.out_deg_emb)
-            print('encoder output shape is : ', encoder_out.shape)
+        pre = MT_STNet(X=self.placeholders['features'], 
+                        X_all = self.placeholders['x_all'],
+                        TE=[self.d_o_wem, self.m_o_dem], 
+                        SE=self.p_em, 
+                        P=self.input_len, 
+                        Q=self.output_len, 
+                        S=self.pre_len, 
+                        L=self.num_blocks, 
+                        K=self.heads, 
+                        d=self.emb_size // self.heads, 
+                        bn=True, 
+                        bn_decay=bn_decay, 
+                        is_training=self.placeholders['is_training'], 
+                        supports=self.supports, 
+                        placeholders=self.placeholders, 
+                        spatial_inf=[self.placeholders['dis'], self.sp_em, self.in_deg_em, self.out_deg_em], 
+                        hp=self.hp, 
+                        model_name=self.model_name)
 
-        print('#................................in the decoder step......................................#')
-        with tf.variable_scope(name_or_scope='decoder'):
-            '''
-            return, the gcn output --- for example, inputs.shape is :  (32, 1, 162, 32)
-            axis=0: bath size
-            axis=1: input data time size
-            axis=2: numbers of the nodes
-            axis=3: output feature size
-            '''
-            out_day = self.d_emd[:, self.hp.input_length:, :, :]
-            out_hour = self.h_emd[:, self.hp.input_length:, :, :]
-            out_minute = self.m_emd[:, self.hp.input_length:, :, :]
-            out_position = self.p_emd[:, self.hp.input_length:, :, :]
+        pre = pre * self.std + self.mean
+        self.pre = tf.transpose(pre, [0, 2, 1], name='output_y')
+        print('predicted values\' shape is ', self.pre.shape)
 
-            decoder = Decoder_ST(hp=self.hp, placeholders=self.placeholders, model_func=self.model_func)
-            self.pre=decoder.decoder_spatio_temporal_1(features=encoder_out,
-                                                       day=out_day,
-                                                       hour=out_hour,
-                                                       minute=out_minute,
-                                                       position=out_position,
-                                                       supports=self.supports,
-                                                       sp=self.sp_emb,
-                                                       dis=self.dis_emb,
-                                                       in_deg=self.in_deg_emb,
-                                                       out_deg=self.out_deg_emb)
-            print('pres shape is : ', self.pre.shape)
+        learning_rate = tf.train.exponential_decay(
+            self.learning_rate, global_step,
+            decay_steps=self.decay_epoch * self.num_train // self.batch_size,
+            decay_rate=0.7, staircase=True)
+        learning_rate = tf.maximum(learning_rate, 1e-5)
 
-        self.loss = tf.reduce_mean(
-                tf.sqrt(tf.reduce_mean(tf.square(self.pre + 1e-10 - self.placeholders['labels']), axis=0)))
-        self.train_op = tf.train.AdamOptimizer(self.hp.learning_rate).minimize(self.loss)
+        self.loss = mae_los(self.pre, self.placeholders['labels'])
+        self.train_op = tf.train.AdamOptimizer(learning_rate).minimize(self.loss, global_step=global_step)
 
-    def test(self):
+    def initialize_session(self,session):
+        self.sess = session
+        self.saver = tf.train.Saver()
+
+    def run_epoch(self,trainX, trainDoW, trainD, trainH, trainM, trainL, trainXAll, valX, valDoW, valD, valH, valM, valL, valXAll, testX, testDoW, testD, testH, testM, testL, testXAll):
         '''
         :return:
         '''
-        model_file = tf.train.latest_checkpoint('weights/')
-        self.saver.restore(self.sess, model_file)
-
-    def describe(self, label, predict):
-        '''
-        :param label:
-        :param predict:
-        :return:
-        '''
-        plt.figure()
-        # Label is observed value,Blue
-        plt.plot(label[0:], 'b', label=u'actual value')
-        # Predict is predicted value，Red
-        plt.plot(predict[0:], 'r', label=u'predicted value')
-        # use the legend
-        plt.legend()
-        # plt.xlabel("time(hours)", fontsize=17)
-        # plt.ylabel("pm$_{2.5}$ (ug/m$^3$)", fontsize=17)
-        # plt.title("the prediction of pm$_{2.5}", fontsize=17)
-        plt.show()
-
-    def initialize_session(self):
-        self.sess = tf.Session()
-        self.saver = tf.train.Saver(var_list=tf.trainable_variables())
-
-    def re_current(self, a, max, min):
-        return [num * (max - min) + min for num in a]
-
-    def run_epoch(self):
-        '''
-        :return:
-        '''
-        max_rmse = 100
+        max_mae = 100
+        shape = trainX.shape
+        num_batch = math.ceil(shape[0] / self.batch_size)
+        self.num_train=shape[0]
         self.sess.run(tf.global_variables_initializer())
+        start_time = datetime.datetime.now()
+        iteration=0
+        for epoch in range(self.epochs):
+            # shuffle
+            permutation = np.random.permutation(shape[0])
+            trainX = trainX[permutation]
+            trainDoW = trainDoW[permutation]
+            trainM = trainM[permutation]
+            trainL = trainL[permutation]
+            trainXAll = trainXAll[permutation]
+            for batch_idx in range(num_batch):
+                iteration+=1
+                start_idx = batch_idx * self.batch_size
+                end_idx = min(shape[0], (batch_idx + 1) * self.batch_size)
+                xs = np.expand_dims(trainX[start_idx : end_idx], axis=-1)
+                day_of_week = np.reshape(trainDoW[start_idx : end_idx], [-1, self.site_num])
+                minute_of_day = np.reshape(trainM[start_idx : end_idx], [-1, self.site_num])
+                labels = trainL[start_idx : end_idx]
+                xs_all = np.expand_dims(trainXAll[start_idx : end_idx], axis=-1)
+                sp, dis = sp_dis(hp=self.hp)
+                in_deg, out_deg = in_out_deg(self.hp)
+                feed_dict = construct_feed_dict(xs, xs_all, self.adj, labels, day_of_week, minute_of_day, self.placeholders, site_num=self.site_num, sp=sp, dis=dis, in_deg=in_deg, out_deg=out_deg)
+                feed_dict.update({self.placeholders['dropout']: self.hp.dropout})
+                l, _ = self.sess.run((self.loss, self.train_op), feed_dict=feed_dict)
 
-        iterate = data_load.DataClass(hp=self.hp)
-        train_next = iterate.next_batch(batch_size=self.hp.batch_size, epoch=self.hp.epoch, is_training=True)
+                if iteration == 100:
+                    end_time = datetime.datetime.now()
+                    total_time = end_time - start_time
+                    print("Total running times is : %f" % total_time.total_seconds())
+            print('validation')
+            mae = self.evaluate(valX, valDoW, valD, valH, valM, valL, valXAll)  # validate processing
+            if max_mae > mae:
+                print('Val loss decrease from {:.3f} to {:.3f}, '
+                      'saving to {}, in epoch {:d}'.format(max_mae, mae, self.hp.save_path, epoch))
+                max_mae = mae
+                self.saver.save(self.sess, save_path=self.hp.save_path)
 
-        for i in range(int((iterate.length // self.hp.site_num * iterate.divide_ratio - (
-                iterate.input_length + iterate.output_length)) // iterate.step)
-                       * self.hp.epoch // self.hp.batch_size):
-            x, day, hour, minute, label = self.sess.run(train_next)
-            features = np.reshape(x, [-1, self.hp.site_num, self.hp.features])
-            day = np.reshape(day, [-1, self.hp.site_num])
-            hour = np.reshape(hour, [-1, self.hp.site_num])
-            minute = np.reshape(minute, [-1, self.hp.site_num])
-            sp,dis = sp_dis(hp=self.hp)
-            in_deg, out_deg = in_out_deg(self.hp)
-            feed_dict = construct_feed_dict(features, self.adj, label, day, hour, minute, self.placeholders, site_num=self.hp.site_num,sp=sp,dis=dis,in_deg=in_deg,out_deg=out_deg)
-            feed_dict.update({self.placeholders['dropout']: self.hp.dropout})
-            loss_, _ = self.sess.run((self.loss, self.train_op), feed_dict=feed_dict)
-            print("after %d steps,the training average loss value is : %.6f" % (i, loss_))
-
-            # validate processing
-            if i % 100 == 0:
-                rmse_error = self.evaluate()
-
-                if max_rmse > rmse_error:
-                    print("the validate average rmse loss value is : %.6f" % (rmse_error))
-                    max_rmse = rmse_error
-                    self.saver.save(self.sess, save_path=self.hp.save_path + 'model.ckpt')
-
-                    # if os.path.exists('model_pb'): shutil.rmtree('model_pb')
-                    # builder = tf.saved_model.builder.SavedModelBuilder('model_pb')
-                    # builder.add_meta_graph_and_variables(self.sess, ["mytag"])
-                    # builder.save()
-
-    def evaluate(self):
+    def evaluate(self, testX, testDoW, testD, testH, testM, testL, testXAll):
         '''
         :return:
         '''
-        label_list = list()
-        predict_list = list()
+        labels_list, pres_list = list(), list()
+        if not self.is_training:
+            # model_file = tf.train.latest_checkpoint(self.para.save_path)
+            saver = tf.train.import_meta_graph(self.hp.save_path + '.meta')
+            # saver.restore(sess, model_file)
+            print('the model weights has been loaded from the path of {:s}.'.format(self.hp.save_path))
+            saver.restore(self.sess, self.hp.save_path)
+        parameters = 0
+        for variable in tf.trainable_variables():
+            parameters += np.product([x.value for x in variable.get_shape()])
+        print('trainable parameters: {:,}'.format(parameters))
 
-        label_list1,label_list2,label_list3 = list(),list(),list()
-        predict_list1,predict_list2,predict_list3 = list(),list(),list()
-
-        # with tf.Session() as sess:
-        model_file = tf.train.latest_checkpoint(self.hp.save_path)
-        if not self.hp.is_training:
-            print('the model weights has been loaded:')
-            self.saver.restore(self.sess, model_file)
-            # self.saver.save(self.sess, save_path='gcn/model/' + 'model.ckpt')
-
-        iterate_test = data_load.DataClass(hp=self.hp)
-        test_next = iterate_test.next_batch(batch_size=self.hp.batch_size, epoch=1, is_training=False)
-        max, min = iterate_test.max_dict['flow'], iterate_test.min_dict['flow']
-        print(max, min)
-
-        # file = open('results/mtstnet.csv', 'w', encoding='utf-8')
-        # writer = csv.writer(file)
-        # writer.writerow(['station']+['day_'+str(i) for i in range(self.hp.predict_length)]+['hour_'+str(i) for i in range(self.hp.predict_length)]+
-        #                 ['minute_' + str(i) for i in range(self.hp.predict_length)]+['label_'+str(i) for i in range(self.hp.predict_length)]+
-        #                 ['predict_' + str(i) for i in range(self.hp.predict_length)])
-
-        # '''
-        for i in range(int((iterate_test.length // self.hp.site_num
-                            - iterate_test.length // self.hp.site_num * iterate_test.divide_ratio
-                            - (iterate_test.input_length + iterate_test.output_length)) // iterate_test.output_length)
-                       // self.hp.batch_size):
-            start_time = datetime.datetime.now()
-            x, day, hour, minute, label = self.sess.run(test_next)
-            features = np.reshape(x, [-1, self.hp.site_num, self.hp.features])
-            day = np.reshape(day, [-1, self.hp.site_num])
-            hour = np.reshape(hour, [-1, self.hp.site_num])
-            minute = np.reshape(minute, [-1, self.hp.site_num])
+        textX_shape = testX.shape
+        total_batch = math.ceil(textX_shape[0] / self.batch_size)
+        start_time = datetime.datetime.now()
+        for b_idx in range(total_batch):
+            start_idx = b_idx * self.batch_size
+            end_idx = min(textX_shape[0], (b_idx + 1) * self.batch_size)
+            xs = np.expand_dims(testX[start_idx: end_idx], axis=-1)
+            day_of_week = np.reshape(testDoW[start_idx: end_idx], [-1, self.site_num])
+            minute_of_day = np.reshape(testM[start_idx: end_idx], [-1, self.site_num])
+            labels = testL[start_idx: end_idx]
+            xs_all = np.expand_dims(testXAll[start_idx: end_idx], axis=-1)
             sp, dis = sp_dis(hp=self.hp)
             in_deg, out_deg = in_out_deg(self.hp)
-            feed_dict = construct_feed_dict(features, self.adj, label, day, hour, minute, self.placeholders, site_num=self.hp.site_num,sp=sp,dis=dis,in_deg=in_deg,out_deg=out_deg)
+            feed_dict = construct_feed_dict(xs, xs_all, self.adj, labels, day_of_week, minute_of_day, self.placeholders,
+                                            site_num=self.site_num, sp=sp, dis=dis, in_deg=in_deg, out_deg=out_deg, is_training=False)
             feed_dict.update({self.placeholders['dropout']: 0.0})
+            pres = self.sess.run((self.pre), feed_dict=feed_dict)
 
-            pre = self.sess.run((self.pre), feed_dict=feed_dict)
-            label_list.append(label[:,:,:self.hp.predict_length])
-            predict_list.append(pre[:,:,:self.hp.predict_length])
+            labels_list.append(labels)
+            pres_list.append(pres)
 
-            # for site in range(self.hp.site_num):
-            #     writer.writerow([station[0][site]]+list(day[self.hp.input_length:,0])+
-            #                      list(hour[self.hp.input_length:,0])+
-            #                      list(minute[self.hp.input_length:,0]*5)+
-            #                      list(np.round(self.re_current(label[0][site],max,min)))+
-            #                      list(np.round(self.re_current(pre[0][site],max,min))))
+        end_time = datetime.datetime.now()
+        total_time = end_time - start_time
+        print("Total running times is : %f" % total_time.total_seconds())
 
-            label_list1.append(label[:,:13,:self.hp.predict_length])
-            label_list2.append(label[:, 13:26, :self.hp.predict_length])
-            label_list3.append(label[:, 26:, :self.hp.predict_length])
-            predict_list1.append(pre[:, :13, :self.hp.predict_length])
-            predict_list2.append(pre[:, 13:26, :self.hp.predict_length])
-            predict_list3.append(pre[:, 26:, :self.hp.predict_length])
-
-            # end_time = datetime.datetime.now()
-            # total_time = end_time - start_time
-            # print("Total running times is : %f" % total_time.total_seconds())
-        # file.close()
-
-        label_list = np.reshape(np.array(label_list, dtype=np.float32),
-                                [-1, self.hp.site_num, self.hp.predict_length]).transpose([1, 0, 2])
-        predict_list = np.reshape(np.array(predict_list, dtype=np.float32),
-                                  [-1, self.hp.site_num, self.hp.predict_length]).transpose([1, 0, 2])
-
-        label_list1 = np.reshape(np.array(label_list1, dtype=np.float32),
-                                [-1, 13, self.hp.predict_length]).transpose([1, 0, 2])
-        predict_list1 = np.reshape(np.array(predict_list1, dtype=np.float32),
-                                  [-1, 13, self.hp.predict_length]).transpose([1, 0, 2])
-        label_list2 = np.reshape(np.array(label_list2, dtype=np.float32),
-                                [-1, 13, self.hp.predict_length]).transpose([1, 0, 2])
-        predict_list2 = np.reshape(np.array(predict_list2, dtype=np.float32),
-                                  [-1, 13, self.hp.predict_length]).transpose([1, 0, 2])
-        label_list3 = np.reshape(np.array(label_list3, dtype=np.float32),
-                                [-1, 40, self.hp.predict_length]).transpose([1, 0, 2])
-        predict_list3 = np.reshape(np.array(predict_list3, dtype=np.float32),
-                                  [-1, 40, self.hp.predict_length]).transpose([1, 0, 2])
-
-        if self.hp.normalize:
-            label_list = np.array(
-                [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in label_list])
-            predict_list = np.array(
-                [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in predict_list])
-
-            label_list1 = np.array(
-                [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in label_list1])
-            predict_list1 = np.array(
-                [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in predict_list1])
-            label_list2 = np.array(
-                [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in label_list2])
-            predict_list2 = np.array(
-                [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in predict_list2])
-            label_list3 = np.array(
-                [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in label_list3])
-            predict_list3 = np.array(
-                [self.re_current(np.reshape(site_label, [-1]), max, min) for site_label in predict_list3])
-        else:
-            label_list = np.array([np.reshape(site_label, [-1]) for site_label in label_list])
-            predict_list = np.array([np.reshape(site_label, [-1]) for site_label in predict_list])
-
-        label_list = np.reshape(label_list, [-1])
-        predict_list = np.reshape(predict_list, [-1])
-
-        label_list1 = np.reshape(label_list1, [-1])
-        predict_list1 = np.reshape(predict_list1, [-1])
-        label_list2 = np.reshape(label_list2, [-1])
-        predict_list2 = np.reshape(predict_list2, [-1])
-        label_list3 = np.reshape(label_list3, [-1])
-        predict_list3 = np.reshape(predict_list3, [-1])
-
-        # average_error, rmse_error, cor, R2 = accuracy(label_list, predict_list)  # 产生预测指标
-        print('1')
-        metric(predict_list1, label_list1)
-        print('2')
-        metric(predict_list2, label_list2)
-        print('3')
-        metric(predict_list3, label_list3)
-        print('4')
-        mae, rmse, mape, cor, r2=metric(np.round(predict_list),np.round(label_list))
-        # self.describe(label_list, predict_list)   #预测值可视化
+        labels_list = np.concatenate(labels_list, axis=0)
+        pres_list = np.concatenate(pres_list, axis=0)
+        np.savez_compressed('data/MT-STNet-' + 'YINCHUAN', **{'prediction': pres_list, 'truth': labels_list})
+        if not self.is_training:
+            print('                MAE\t\tRMSE\t\tMAPE')
+            for (l,r) in [(0,66)]:
+                for i in range(self.output_len):
+                    mae, rmse, mape = metric(pres_list[:,l:r,i], labels_list[:,l:r,i])
+                    print('step: %02d         %.3f\t\t%.3f\t\t%.3f%%' % (i + 1, mae, rmse, mape * 100))
+                mae, rmse, mape = metric(pres_list[:,l:r], labels_list[:,l:r])  # 产生预测指标
+                print('average:         %.3f\t\t%.3f\t\t%.3f%%' %(mae, rmse, mape * 100))
+                print('\n')
+        mae, rmse, mape = metric(pres_list, labels_list)
         return mae
 
 
@@ -413,6 +287,9 @@ def main(argv=None):
     :param argv:
     :return:
     '''
+    config = ConfigProto()
+    config.gpu_options.allow_growth = True
+    session = InteractiveSession(config=config)
     print('#......................................beginning........................................#')
     para = parameter(argparse.ArgumentParser())
     para = para.get_para()
@@ -426,13 +303,19 @@ def main(argv=None):
         para.batch_size = 1
         para.is_training = False
 
-    pre_model = Model(para)
-    pre_model.initialize_session()
+    trainX, trainDoW, trainD, trainH, trainM, trainL, trainXAll, valX, valDoW, valD, valH, valM, valL, valXAll, testX, testDoW, testD, testH, testM, testL, testXAll, mean, std = loadData(para)
+    print('trainX: %s\ttrainY: %s' % (trainX.shape, trainL.shape))
+    print('valX:   %s\t\tvalY:   %s' % (valX.shape, valL.shape))
+    print('testX:  %s\t\ttestY:  %s' % (testX.shape, testL.shape))
+    print('data loaded!')
+
+    pre_model = Model(para, mean=mean, std=std)
+    pre_model.initialize_session(session)
 
     if int(val) == 1:
-        pre_model.run_epoch()
+        pre_model.run_epoch(trainX, trainDoW, trainD, trainH, trainM, trainL, trainXAll, valX, valDoW, valD, valH, valM, valL, valXAll, testX, testDoW, testD, testH, testM, testL, testXAll)
     else:
-        pre_model.evaluate()
+        pre_model.evaluate(testX, testDoW, testD, testH, testM, testL, testXAll)
 
     print('#...................................finished............................................#')
 
