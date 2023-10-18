@@ -1,11 +1,136 @@
 # -- coding: utf-8 --
-
-import numpy as np
 import pickle as pkl
-import networkx as nx
 import scipy.sparse as sp
-from scipy.sparse.linalg.eigen.arpack import eigsh
+from scipy.sparse.linalg.eigen import eigsh
+# from scipy.sparse.linalg.eigen.arpack import eigsh
 import sys
+from model.inits import *
+
+def mae_los(pred, label):
+    mask = tf.not_equal(label, 0)
+    mask = tf.cast(mask, tf.float32)
+    mask /= tf.reduce_mean(mask)
+    mask = tf.compat.v2.where(
+        condition = tf.math.is_nan(mask), x = 0., y = mask)
+    loss = tf.abs(tf.subtract(pred, label))
+    loss *= mask
+    loss = tf.compat.v2.where(
+        condition = tf.math.is_nan(loss), x = 0., y = loss)
+    loss = tf.reduce_mean(loss)
+    return loss
+
+def FC(x, units, activations, bn, bn_decay, is_training, use_bias = True, drop = None):
+    if isinstance(units, int):
+        units = [units]
+        activations = [activations]
+    elif isinstance(units, tuple):
+        units = list(units)
+        activations = list(activations)
+    assert type(units) == list
+    for num_unit, activation in zip(units, activations):
+        if drop is not None:
+            x = dropout(x, drop = drop, is_training = is_training)
+        x = conv2d(
+            x, output_dims = num_unit, kernel_size = [1, 1], stride = [1, 1],
+            padding = 'VALID', use_bias = use_bias, activation = activation,
+            bn = bn, bn_decay = bn_decay, is_training = is_training)
+    return x
+
+def STEmbedding(SE, TE, D, bn, bn_decay, is_training):
+    '''
+    spatio-temporal embedding
+    SE:     [N, D]
+    TE:     [batch_size, P + Q, 2] (dayofweek, timeofday)
+    T:      num of time steps in one day
+    D:      output dims
+    retrun: [batch_size, P + Q, N, D]
+    '''
+    # spatial embedding
+    # SE = tf.expand_dims(tf.expand_dims(SE, axis=0), axis=0)
+    SE = FC(
+        SE, units=[D, D], activations=[tf.nn.relu, None],
+        bn=bn, bn_decay=bn_decay, is_training=is_training)
+    # temporal embedding
+    TE = tf.concat(TE, axis=-1)
+    TE = FC(
+        TE, units=[D, D], activations=[tf.nn.relu, None],
+        bn=bn, bn_decay=bn_decay, is_training=is_training)
+    return tf.add(SE, TE)
+
+def conv2d(x, output_dims, kernel_size, stride = [1, 1],
+           padding = 'SAME', use_bias = True, activation = tf.nn.relu,
+           bn = False, bn_decay = None, is_training = None):
+    input_dims = x.get_shape()[-1].value
+    kernel_shape = kernel_size + [input_dims, output_dims]
+    kernel = tf.Variable(
+        tf.glorot_uniform_initializer()(shape = kernel_shape),
+        dtype = tf.float32, trainable = True, name = 'kernel')
+    x = tf.nn.conv2d(x, kernel, [1] + stride + [1], padding = padding)
+    if use_bias:
+        bias = tf.Variable(
+            tf.zeros_initializer()(shape = [output_dims]),
+            dtype = tf.float32, trainable = True, name = 'bias')
+        x = tf.nn.bias_add(x, bias)
+    if activation is not None:
+        if bn:
+            x = batch_norm(x, is_training = is_training, bn_decay = bn_decay)
+        x = activation(x)
+    return x
+
+def batch_norm(x, is_training, bn_decay):
+    input_dims = x.get_shape()[-1].value
+    moment_dims = list(range(len(x.get_shape()) - 1))
+    beta = tf.Variable(
+        tf.zeros_initializer()(shape = [input_dims]),
+        dtype = tf.float32, trainable = True, name = 'beta')
+    gamma = tf.Variable(
+        tf.ones_initializer()(shape = [input_dims]),
+        dtype = tf.float32, trainable = True, name = 'gamma')
+    batch_mean, batch_var = tf.nn.moments(x, moment_dims, name='moments')
+
+    decay = bn_decay if bn_decay is not None else 0.9
+    ema = tf.train.ExponentialMovingAverage(decay = decay)
+    # Operator that maintains moving averages of variables.
+    ema_apply_op = tf.cond(
+        is_training,
+        lambda: ema.apply([batch_mean, batch_var]),
+        lambda: tf.no_op())
+    # Update moving average and return current batch's avg and var.
+    def mean_var_with_update():
+        with tf.control_dependencies([ema_apply_op]):
+            return tf.identity(batch_mean), tf.identity(batch_var)
+    # ema.average returns the Variable holding the average of var.
+    mean, var = tf.cond(
+        is_training,
+        mean_var_with_update,
+        lambda: (ema.average(batch_mean), ema.average(batch_var)))
+    x = tf.nn.batch_normalization(x, mean, var, beta, gamma, 1e-3)
+    return x
+
+def dropout(x, drop, is_training):
+    x = tf.cond(
+        is_training,
+        lambda: tf.nn.dropout(x, rate = drop),
+        lambda: x)
+    return x
+
+def in_out_deg(hp):
+    # in_deg shape [self.hp.site_num*self.hp.site_num, 15]
+    in_deg = pd.read_csv(hp.file_in_deg,encoding='utf-8').values[:,1]
+    # out_deg shape [self.hp.site_num, self.hp.site_num]
+    out_deg = pd.read_csv(hp.file_out_deg, encoding='utf-8').values[:,1]
+
+    in_deg=np.reshape(in_deg,[1,-1])
+    out_deg=np.reshape(out_deg,[1,-1])
+
+    return in_deg,out_deg
+
+def sp_dis(hp):
+    # sp shape [self.hp.site_num*self.hp.site_num, 15]
+    sp = pd.read_csv(hp.file_sp,encoding='utf-8').values
+    # dis shape [self.hp.site_num, self.hp.site_num]
+    dis = pd.read_csv(hp.file_dis,encoding='utf-8').values
+    return sp,dis
 
 def parse_index_file(filename):
     """Parse index file."""
@@ -20,80 +145,6 @@ def sample_mask(idx, l):
     mask = np.zeros(l)
     mask[idx] = 1
     return np.array(mask, dtype=np.bool)
-
-
-def load_data(dataset_str):
-    """
-    Loads input data from gcn/data directory
-
-    ind.dataset_str.x => the feature vectors of the training instances as scipy.sparse.csr.csr_matrix object;
-    ind.dataset_str.tx => the feature vectors of the test instances as scipy.sparse.csr.csr_matrix object;
-    ind.dataset_str.allx => the feature vectors of both labeled and unlabeled training instances
-        (a superset of ind.dataset_str.x) as scipy.sparse.csr.csr_matrix object;
-    ind.dataset_str.y => the one-hot labels of the labeled training instances as numpy.ndarray object;
-    ind.dataset_str.ty => the one-hot labels of the test instances as numpy.ndarray object;
-    ind.dataset_str.ally => the labels for instances in ind.dataset_str.allx as numpy.ndarray object;
-    ind.dataset_str.graph => a dict in the format {index: [index_of_neighbor_nodes]} as collections.defaultdict
-        object;
-    ind.dataset_str.test.index => the indices of test instances in graph, for the inductive setting as list object.
-
-    All objects above must be saved using python pickle module.
-
-    :param dataset_str: Dataset name
-    :return: All data input files loaded (as well the training/test data).
-    """
-    names = ['x', 'y', 'tx', 'ty', 'allx', 'ally', 'graph']
-    objects = []
-    for i in range(len(names)):
-        with open("data/ind.{}.{}".format(dataset_str, names[i]), 'rb') as f:
-            if sys.version_info > (3, 0):
-                objects.append(pkl.load(f, encoding='latin1'))
-            else:
-                objects.append(pkl.load(f))
-
-    x, y, tx, ty, allx, ally, graph = tuple(objects)
-    print(x.shape)
-    print(y.shape)
-    print(tx.shape)
-    print(allx.shape)
-
-    test_idx_reorder = parse_index_file("data/ind.{}.test.index".format(dataset_str))
-    test_idx_range = np.sort(test_idx_reorder)
-
-    if dataset_str == 'citeseer':
-        # Fix citeseer dataset (there are some isolated nodes in the graph)
-        # Find isolated nodes, add them as zero-vecs into the right position
-        test_idx_range_full = range(min(test_idx_reorder), max(test_idx_reorder)+1)
-        tx_extended = sp.lil_matrix((len(test_idx_range_full), x.shape[1]))
-        tx_extended[test_idx_range-min(test_idx_range), :] = tx
-        tx = tx_extended
-        ty_extended = np.zeros((len(test_idx_range_full), y.shape[1]))
-        ty_extended[test_idx_range-min(test_idx_range), :] = ty
-        ty = ty_extended
-
-    features = sp.vstack((allx, tx)).tolil()
-    features[test_idx_reorder, :] = features[test_idx_range, :]
-    adj = nx.adjacency_matrix(nx.from_dict_of_lists(graph))
-
-    labels = np.vstack((ally, ty))
-    labels[test_idx_reorder, :] = labels[test_idx_range, :]
-
-    idx_test = test_idx_range.tolist()
-    idx_train = range(len(y))
-    idx_val = range(len(y), len(y)+500)
-
-    train_mask = sample_mask(idx_train, labels.shape[0])
-    val_mask = sample_mask(idx_val, labels.shape[0])
-    test_mask = sample_mask(idx_test, labels.shape[0])
-
-    y_train = np.zeros(labels.shape)
-    y_val = np.zeros(labels.shape)
-    y_test = np.zeros(labels.shape)
-    y_train[train_mask, :] = labels[train_mask, :]
-    y_val[val_mask, :] = labels[val_mask, :]
-    y_test[test_mask, :] = labels[test_mask, :]
-
-    return adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask
 
 
 def sparse_to_tuple(sparse_mx):
@@ -118,12 +169,9 @@ def sparse_to_tuple(sparse_mx):
 def preprocess_features(features):
     """Row-normalize feature matrix and convert to tuple representation"""
     rowsum = np.array(features.sum(1))
-    print(rowsum.shape)
     r_inv = np.power(rowsum, -1).flatten()
     r_inv[np.isinf(r_inv)] = 0.
-    print(r_inv.shape)
     r_mat_inv = sp.diags(r_inv)
-    print(r_mat_inv.shape)
     features = r_mat_inv.dot(features)
     print('features shape is : ',features.shape)
     return sparse_to_tuple(features)
@@ -159,8 +207,7 @@ def preprocess_adj(adj):
     return sparse_to_tuple(adj_normalized)
 
 
-
-def construct_feed_dict(features, adj, labels,  day, hour, minute, placeholders, site_num=66,sp=None,dis=None,in_deg=None,out_deg=None):
+def construct_feed_dict(features, x_all, adj, labels, day_of_week, minute_of_day, placeholders, site_num=66,sp=None,dis=None,in_deg=None,out_deg=None, is_training=True):
     """Construct feed dictionary."""
     feed_dict = dict()
     feed_dict.update({placeholders['sp']: sp})
@@ -169,15 +216,16 @@ def construct_feed_dict(features, adj, labels,  day, hour, minute, placeholders,
     feed_dict.update({placeholders['out_deg']: out_deg})
     feed_dict.update({placeholders['position']: np.array([[i for i in range(site_num)]],dtype=np.int32)})
     feed_dict.update({placeholders['labels']: labels})
-    feed_dict.update({placeholders['day']: day})
-    feed_dict.update({placeholders['hour']: hour})
-    feed_dict.update({placeholders['minute']: minute})
+    feed_dict.update({placeholders['day_of_week']: day_of_week})
+    feed_dict.update({placeholders['minute_of_day']: minute_of_day})
     feed_dict.update({placeholders['features']: features})
+    feed_dict.update({placeholders['x_all']: x_all})
     feed_dict.update({placeholders['indices_i']: adj[0]})
     feed_dict.update({placeholders['values_i']: adj[1]})
     feed_dict.update({placeholders['dense_shape_i']: adj[2]})
     # feed_dict.update({placeholders['support'][i]: support[i] for i in range(len(support))})
-    feed_dict.update({placeholders['num_features_nonzero']: features[1].shape})
+    feed_dict.update({placeholders['num_features_nonzero']: features[0].shape})
+    feed_dict.update({placeholders['is_training']: is_training})
     return feed_dict
 
 
@@ -203,48 +251,19 @@ def chebyshev_polynomials(adj, k):
 
     return sparse_to_tuple(t_k)
 
-def accuracy(label, predict):
-    '''
-    :param label: represents the observed value
-    :param predict: represents the predicted value
-    :param epoch:
-    :param steps:
-    :return:
-    '''
-    error = label - predict
-    average_error = np.mean(np.fabs(error.astype(float)))
-    print("MAE is : %.6f" % (average_error))
-
-    rmse_error = np.sqrt(np.mean(np.square(label - predict)))
-    print("RMSE is : %.6f" % (rmse_error))
-
-    cor = np.mean(np.multiply((label - np.mean(label)),
-                              (predict - np.mean(predict)))) / (np.std(predict) * np.std(label))
-    print('R is: %.6f' % (cor))
-
-    # mask = label != 0
-    # mape =np.mean(np.fabs((label[mask] - predict[mask]) / label[mask]))*100.0
-    # mape=np.mean(np.fabs((label - predict) / label)) * 100.0
-    # print('mape is: %.6f %' % (mape))
-    sse = np.sum((label - predict) ** 2)
-    sst = np.sum((label - np.mean(label)) ** 2)
-    R2 = 1 - sse / sst  # r2_score(y_actual, y_predicted, multioutput='raw_values')
-    print('R^$2$ is: %.6f' % (R2))
-
-    return average_error, rmse_error, cor, R2
 
 def metric(pred, label):
     with np.errstate(divide='ignore', invalid='ignore'):
         mask = np.not_equal(label, 0)
         mask = mask.astype(np.float32)
         mask /= np.mean(mask)
+
         mae = np.abs(np.subtract(pred, label)).astype(np.float32)
         rmse = np.square(mae)
-        mape = np.divide(mae, label)
-        # mae = np.nan_to_num(mae * mask)
-        # wape = np.divide(np.sum(mae), np.sum(label))
+        mape = np.divide(mae, label.astype(np.float32))
+        mae = np.nan_to_num(mae * mask)
         mae = np.mean(mae)
-        # rmse = np.nan_to_num(rmse * mask)
+        rmse = np.nan_to_num(rmse * mask)
         rmse = np.sqrt(np.mean(rmse))
         mape = np.nan_to_num(mape * mask)
         mape = np.mean(mape)
@@ -253,10 +272,4 @@ def metric(pred, label):
         sse = np.sum((label - pred) ** 2)
         sst = np.sum((label - np.mean(label)) ** 2)
         r2 = 1 - sse / sst  # r2_score(y_actual, y_predicted, multioutput='raw_values')
-        print('mae is : %.6f'%mae)
-        print('rmse is : %.6f'%rmse)
-        print('mape is : %.6f'%mape)
-        print('r is : %.6f'%cor)
-        print('r$^2$ is : %.6f'%r2)
-    return mae, rmse, mape, cor, r2
-
+    return mae, rmse, mape

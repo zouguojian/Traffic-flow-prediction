@@ -1,5 +1,5 @@
 # -- coding: utf-8 --
-import tensorflow as tf
+from model.inits import *
 
 
 def masked_softmax_cross_entropy(preds, labels, mask):

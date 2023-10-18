@@ -1,11 +1,11 @@
 # -- coding: utf-8 --
-import tensorflow as tf
+from model.inits import *
 
 def embedding(inputs,
               vocab_size,
               num_units,
               zero_pad=True,
-              scale=True,
+              scale=False,
               scope="embedding",
               reuse=None):
     '''Embeds a given tensor.

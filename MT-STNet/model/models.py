@@ -38,8 +38,8 @@ class Model(object):
         for i, layer in enumerate(self.layers):
             hidden = layer.forward(self.activations[-1])
             # trick
-            res_x=tf.layers.dense(self.inputs,units=hidden.shape[-1],name=str(i),reuse=tf.AUTO_REUSE)
-            self.activations.append(hidden+res_x) # feed forward
+            # res_x=tf.layers.dense(self.inputs,units=hidden.shape[-1], name=str(i),reuse=tf.AUTO_REUSE)
+            self.activations.append(hidden) # feed forward
         outputs = self.activations[-1] # the last layer output
         return outputs
 
@@ -84,20 +84,20 @@ class GCN(Model):
         #                                     sparse_inputs=False,
         #                                     res_name='layer2'))
         #
-        # self.layers.append(GraphConvolution(input_dim=self.input_dim,
-        #                                     output_dim=self.input_dim,
-        #                                     placeholders=self.placeholders,
-        #                                     supports=self.supports,
-        #                                     act=tf.nn.relu,
-        #                                     bias=True,
-        #                                     dropout=True,
-        #                                     sparse_inputs=False,
-        #                                     res_name='layer3'))
-
         self.layers.append(GraphConvolution(input_dim=self.input_dim,
                                             output_dim=self.input_dim,
                                             placeholders=self.placeholders,
                                             supports=self.supports,
-                                            act=lambda x: x,
-                                            dropout=False,
-                                            res_name='layer4'))
+                                            act=tf.nn.relu,
+                                            bias=True,
+                                            dropout=True,
+                                            sparse_inputs=False,
+                                            res_name='layer3'))
+
+        # self.layers.append(GraphConvolution(input_dim=self.input_dim,
+        #                                     output_dim=self.input_dim,
+        #                                     placeholders=self.placeholders,
+        #                                     supports=self.supports,
+        #                                     act=lambda x: x,
+        #                                     dropout=False,
+        #                                     res_name='layer4'))
