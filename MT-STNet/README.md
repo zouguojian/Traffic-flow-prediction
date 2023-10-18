@@ -1,6 +1,6 @@
 # Traffic-flow-prediction  
 
-We have added all the baseline models‘ results and codes to our GitHub page, including HA, LSTM_BILSTM, GMAN, AST-GAT, T-GCN, Etc. Our task is to use the twelve historical time steps to predict the future twelve target time steps traffic flow of the highway, and our time granularity is 5 minutes. If you have any questions, don't hesitate to contact us, thanks！
+We have added all the baseline models‘ results and codes to our GitHub page, including SARIMA, LSTM_BILSTM, GMAN, ASTGCN, T-GCN, Etc. Our task is to use the twelve historical time steps to predict the future twelve target time steps traffic flow of the highway, and our time granularity is 5 minutes. If you have any questions, don't hesitate to contact us, thanks！
 
 ## WHAT SHOULD WE PAY ATTENTION TO FOCUS ON THE RUNNING ENVIRONMENT?
 
