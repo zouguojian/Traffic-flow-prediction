@@ -80,8 +80,6 @@ print('Visual display, including stationarity test, autocorrelation, and partial
 # It means that the data is relatively stable, but seasonal difference is needed.
 # plot(y.values[:2016])
 
-# y = y[:10000]
-
 from statsmodels.tsa.arima.model import ARIMA
 def find_pq(ts, d=0, max_p=5, max_q=5):
     best_p, best_q = 0, 0
@@ -105,7 +103,7 @@ def version_arima_with_manual(ts):
     ARIMA（手动季节差分）
     """
     # period 周期大小
-    periods = 12 * 24
+    periods = 12 * 24 * 7
     # seasonal difference季节差分
     ts_diff = ts - ts.shift(periods)
     # 再次差分（季节差分后p值小于0.05-接近，可认为平稳，若要严格一点也可再做一次差分）
@@ -121,8 +119,8 @@ def version_arima_with_manual(ts):
     print(train.shape, test.shape)
 
     # model training 模型训练（训练数据为差分后的数据-已平稳，所以d=0）
-    # p, q, _ = find_pq(train)
-    p, q = 4, 3
+    p, q, _ = find_pq(train)
+    # p, q = 4, 3
     start_time = datetime.datetime.now()
     model = ARIMA(train.tolist(), order=(p, 0, q)).fit()
     end_time = datetime.datetime.now()
@@ -198,49 +196,7 @@ def version_arima_with_manual(ts):
 '''arima 实现过程'''
 filtered_data = data[data.iloc[:, 0] == 43]
 y = filtered_data.iloc[:, 5]
-pres, labels = version_arima_with_manual(y)
-# '''
-tasks_list=[]
-pres_n, labels_n= [], []
-for i in range(0,66):
-    print(i)
-    filtered_data = data[data.iloc[:, 0] == i]
-    y = filtered_data.iloc[:, 5]
-    mae, _, _, pres, labels = version_arima_with_manual(y)
-    if mae < 20: 
-        pres_n.append(np.expand_dims(pres, axis=1))
-        labels_n.append(np.expand_dims(labels, axis=1))
-    if i == 12:
-        tasks_list.append((0,len(pres_n)+1))
-    elif i ==25:
-        tasks_list.append((tasks_list[0][1],len(pres_n)+1))
-    elif i ==65:
-        tasks_list.append((tasks_list[1][1],len(pres_n)+1))
-
-
-log_string(log,'                MAE\t\tRMSE\t\tMAPE')
-print('                MAE\t\tRMSE\t\tMAPE')
-for (l, r) in [tasks_list[0],tasks_list[1],tasks_list[2]]:
-    for i in range(12):
-        mae, rmse, mape = metric(pred=np.concatenate(pres_n,axis=1)[:,l:r,i],label=np.concatenate(labels_n,axis=1)[:,l:r,i])
-        log_string(log,'step: %02d         %.3f\t\t%.3f\t\t%.3f%%' % (i + 1, mae, rmse, mape * 100))
-        print('step: %02d         %.3f\t\t%.3f\t\t%.3f%%' % (i + 1, mae, rmse, mape * 100))
-    mae, rmse, mape = metric(pred=np.concatenate(pres_n,axis=1)[:,l:r],label=np.concatenate(labels_n,axis=1)[:,l:r])  # 产生预测指标
-    log_string(log,'average:         %.3f\t\t%.3f\t\t%.3f%%' % (mae, rmse, mape * 100))
-    print('average:         %.3f\t\t%.3f\t\t%.3f%%' % (mae, rmse, mape * 100))
-    print('\n')
-
-for (l, r) in [(0,66)]:
-    for i in range(12):
-        mae, rmse, mape = metric(pred=np.concatenate(pres_n,axis=1)[:,l:r,i],label=np.concatenate(labels_n,axis=1)[:,l:r,i])
-        log_string(log,'step: %02d         %.3f\t\t%.3f\t\t%.3f%%' % (i + 1, mae, rmse, mape * 100))
-        print('step: %02d         %.3f\t\t%.3f\t\t%.3f%%' % (i + 1, mae, rmse, mape * 100))
-    mae, rmse, mape = metric(pred=np.concatenate(pres_n,axis=1)[:,l:r],label=np.concatenate(labels_n,axis=1)[:,l:r])  # 产生预测指标
-    log_string(log,'average:         %.3f\t\t%.3f\t\t%.3f%%' % (mae, rmse, mape * 100))
-    print('average:         %.3f\t\t%.3f\t\t%.3f%%' % (mae, rmse, mape * 100))
-    print('\n')
-# '''
-
+version_arima_with_manual(y)
 
 def find_pq_PQ(ts, m, d, D, max_p=4, max_q=4, max_P=2, max_Q=2):
     best_p, best_q = 0, 0
@@ -269,7 +225,7 @@ def version_sarima_with_manual(ts):
     SARIMA（statsmodels）
     """
     # period 周期大小
-    periods = 12 * 24
+    periods = 12 * 24 * 7
 
     # data splitting 数据拆分
     train, test = train_test_split(ts, train_size=0.8)
@@ -277,8 +233,8 @@ def version_sarima_with_manual(ts):
 
     # model training 模型训练
     d, D = 0, 1
-    # p, q, P, Q, _ = find_pq_PQ(ts, periods, d=d, D=D)
-    p, q, P, Q = p, q, P, Q = 3, 3, 0, [1] 
+    p, q, P, Q, _ = find_pq_PQ(ts, periods, d=d, D=D)
+    # p, q, P, Q = p, q, P, Q = 4, 3, 0, [1] 
     model = SARIMAX(train, order=(p, d, q), seasonal_order=(P, D, Q, periods)).fit(disp=-1)
     yhat = model.forecast(test.shape[0])
     print(model.summary())
