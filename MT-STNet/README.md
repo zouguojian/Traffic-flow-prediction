@@ -22,6 +22,16 @@ We have added all the baseline models‘ results and codes to our GitHub page, i
 
 * Latex inference:
 
+      @article{zou2024multi,  
+        title={Multi-task-based spatiotemporal generative inference network: A novel framework for predicting the highway traffic speed},  
+        author={Zou, Guojian and Lai, Ziliang and Wang, Ting and Liu, Zongshi and Bao, Jingjue and Ma, Changxi and Li, Ye and Fan, Jing},  
+        journal={Expert Systems with Applications},  
+        volume={237},  
+        pages={121548},  
+        year={2024},  
+        publisher={Elsevier}  
+      }
+  
     @ARTICLE{10559778,  
       author={Zou, Guojian and Lai, Ziliang and Wang, Ting and Liu, Zongshi and Li, Ye},  
       journal={IEEE Transactions on Intelligent Transportation Systems},  
@@ -30,6 +40,7 @@ We have added all the baseline models‘ results and codes to our GitHub page, i
       volume={},  
       number={},  
       pages={1-16},  
-      doi={10.1109/TITS.2024.3411638}}    
+      doi={10.1109/TITS.2024.3411638}  
+    }    
 
 * paper link [click](https://github.com/zouguojian/Personal-Accepted-Research/blob/main/MT-STNet%20A%20Novel%20Multi-Task%20Spatiotemporal%20Network%20for%20Highway%20Traffic%20Flow%20Prediction/manuscript.pdf)
