@@ -32,15 +32,15 @@ We have added all the baseline models‘ results and codes to our GitHub page, i
         publisher={Elsevier}  
       }
   
-    @ARTICLE{10559778,  
-      author={Zou, Guojian and Lai, Ziliang and Wang, Ting and Liu, Zongshi and Li, Ye},  
-      journal={IEEE Transactions on Intelligent Transportation Systems},  
-      title={MT-STNet: A Novel Multi-Task Spatiotemporal Network for Highway Traffic Flow Prediction},   
-      year={2024},  
-      volume={},  
-      number={},  
-      pages={1-16},  
-      doi={10.1109/TITS.2024.3411638}  
-    }    
+      @ARTICLE{10559778,  
+        author={Zou, Guojian and Lai, Ziliang and Wang, Ting and Liu, Zongshi and Li, Ye},  
+        journal={IEEE Transactions on Intelligent Transportation Systems},  
+        title={MT-STNet: A Novel Multi-Task Spatiotemporal Network for Highway Traffic Flow Prediction},   
+        year={2024},  
+        volume={},  
+        number={},  
+        pages={1-16},  
+        doi={10.1109/TITS.2024.3411638}  
+      }    
 
 * paper link [click](https://github.com/zouguojian/Personal-Accepted-Research/blob/main/MT-STNet%20A%20Novel%20Multi-Task%20Spatiotemporal%20Network%20for%20Highway%20Traffic%20Flow%20Prediction/manuscript.pdf)
