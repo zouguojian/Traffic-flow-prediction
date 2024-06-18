@@ -8,6 +8,6 @@ If not, some problems will appear in the running stage.
 ---
 
 #### NOTICE   
---->>>>>>> MT-STNet has been accepted by IEEE Transactions on Intelligent Transportation Systems TITS.   
+--->>>>>>> MT-STNet has been accepted by IEEE Transactions on Intelligent Transportation Systems (IEEE T-ITS).   
 
 The above codes have been uploaded to the Git-Hub page [[codes link]](https://github.com/zouguojian/Traffic-flow-prediction).  
