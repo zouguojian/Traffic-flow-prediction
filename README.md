@@ -11,3 +11,19 @@ If not, some problems will appear in the running stage.
 --->>>>>>> MT-STNet has been accepted by IEEE Transactions on Intelligent Transportation Systems (IEEE T-ITS).   
 
 The above codes have been uploaded to the Git-Hub page [[codes link]](https://github.com/zouguojian/Traffic-flow-prediction).  
+
+# About
+
+If you find this repository useful in your research, please cite the following paper:
+```
+@article{zou2024mt,
+  title={MT-STNet: A Novel Multi-Task Spatiotemporal Network for Highway Traffic Flow Prediction},
+  author={Zou, Guojian and Lai, Ziliang and Wang, Ting and Liu, Zongshi and Li, Ye},
+  journal={IEEE Transactions on Intelligent Transportation Systems},
+  volume={25},
+  number={7},
+  pages={8221--8236},
+  year={2024},
+  publisher={IEEE}
+}
+```
